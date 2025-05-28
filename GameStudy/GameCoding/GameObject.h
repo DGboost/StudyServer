@@ -1,17 +1,13 @@
 #pragma once
+#include "FLipbookActor.h"
+#include "Enums.h"
 
-#include "FlipbookActor.h"
-
-class Flipbook;
-class Collider;
-class BoxCollider;
-
-class Player : public FlipbookActor
+class GameObject : public FlipbookActor
 {
 	using Super = FlipbookActor;
 public:
-	Player();
-	virtual ~Player() override;
+
+	virtual ~GameObject() override;
 
 	virtual void BeginPlay() override;
 	virtual void Tick() override;
@@ -19,28 +15,23 @@ public:
 
 private:
 
-	virtual void TickIdle();
-	virtual void TickMove();
-	virtual void TickSkill();
+	virtual void TickIdle() {}
+	virtual void TickMove() {}
+	virtual void TickSkill() {}
 
 	void SetState(ObjectState state);
 	void SetDir(Dir dir);
 
-	void UpdateAnimation();
+	virtual void UpdateAnimation() {}
 
 	bool HasReachedDest();
 	bool CanGo(Vec2Int cellPos);
 	void SetCellPos(Vec2Int cellPos, bool teleport = false);
 
 private:
-	Flipbook* _flipbookIdle[4] = {};
-	Flipbook* _flipbookMove[4] = {};
-	Flipbook* _flipbookAttack[4] = {};
-
 	Vec2Int _cellPos = {};
 	Vec2 _speed = {};
 	Dir _dir = DIR_DOWN;
 	ObjectState _state = ObjectState::Idle;
-	bool _keyPressed = false;
 };
 
