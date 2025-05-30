@@ -11,7 +11,7 @@
 
 Player::Player()
 {
-	_flipbookIdle[DIR_UP] = GET_SINGLE(ResourceManager)->GetFlipbook(L"FB_IdleUp");
+	Player::_flipbookIdle[DIR_UP] = GET_SINGLE(ResourceManager)->GetFlipbook(L"FB_IdleUp");
 	_flipbookIdle[DIR_DOWN] = GET_SINGLE(ResourceManager)->GetFlipbook(L"FB_IdleDown");
 	_flipbookIdle[DIR_LEFT] = GET_SINGLE(ResourceManager)->GetFlipbook(L"FB_IdleLeft");
 	_flipbookIdle[DIR_RIGHT] = GET_SINGLE(ResourceManager)->GetFlipbook(L"FB_IdleRight");
@@ -161,21 +161,6 @@ void Player::TickSkill()
 
 }
 
-void Player::SetState(ObjectState state)
-{
-	if (_state == state)
-		return;
-
-	_state = state;
-	UpdateAnimation();
-}
-
-void Player::SetDir(Dir dir)
-{
-	_dir = dir;
-	UpdateAnimation();
-}
-
 void Player::UpdateAnimation()
 {
 	switch (_state)
@@ -193,33 +178,4 @@ void Player::UpdateAnimation()
 		SetFlipbook(_flipbookAttack[_dir]);
 		break;
 	}
-}
-
-bool Player::HasReachedDest()
-{
-	Vec2 dir = (_destPos - _pos);
-	return (dir.Length() < 10.f);
-}
-
-bool Player::CanGo(Vec2Int cellPos)
-{
-	DevScene* scene = dynamic_cast<DevScene*>(GET_SINGLE(SceneManager)->GetCurrentScene());
-	if (scene == nullptr)
-		return false;
-
-	return scene->CanGo(cellPos);
-}
-
-void Player::SetCellPos(Vec2Int cellPos, bool teleport)
-{
-	_cellPos = cellPos;
-	
-	DevScene* scene = dynamic_cast<DevScene*>(GET_SINGLE(SceneManager)->GetCurrentScene());
-	if (scene == nullptr)
-		return;
-
-	_destPos = scene->ConvertPos(cellPos);
-
-	if (teleport)
-		_pos = _destPos;		
 }

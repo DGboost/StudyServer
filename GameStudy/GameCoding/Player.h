@@ -1,14 +1,12 @@
 #pragma once
 
-#include "FlipbookActor.h"
+#include "Creature.h"
 
-class Flipbook;
-class Collider;
-class BoxCollider;
-
-class Player : public FlipbookActor
+class Player : public Creature
 {
-	using Super = FlipbookActor;
+public:
+	using Super = Creature;
+
 public:
 	Player();
 	virtual ~Player() override;
@@ -19,28 +17,16 @@ public:
 
 private:
 
-	virtual void TickIdle();
-	virtual void TickMove();
-	virtual void TickSkill();
-
-	void SetState(ObjectState state);
-	void SetDir(Dir dir);
-
-	void UpdateAnimation();
-
-	bool HasReachedDest();
-	bool CanGo(Vec2Int cellPos);
-	void SetCellPos(Vec2Int cellPos, bool teleport = false);
+	virtual void TickIdle() override;
+	virtual void TickMove() override;
+	virtual void TickSkill() override;
+	virtual void UpdateAnimation() override;
 
 private:
 	Flipbook* _flipbookIdle[4] = {};
 	Flipbook* _flipbookMove[4] = {};
 	Flipbook* _flipbookAttack[4] = {};
 
-	Vec2Int _cellPos = {};
-	Vec2 _speed = {};
-	Dir _dir = DIR_DOWN;
-	ObjectState _state = ObjectState::Idle;
 	bool _keyPressed = false;
 };
 
