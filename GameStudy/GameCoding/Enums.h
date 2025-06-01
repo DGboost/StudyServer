@@ -11,6 +11,7 @@ enum LAYER_TYPE
 {
 	LAYER_BACKGROUND,
 	LAYER_OBJECT,
+	LAYER_EFFECT,
 	// ...
 	LAYER_UI,
 
@@ -43,12 +44,18 @@ enum class ObjectState
 {
 	Idle,
 	Move,
-	Skill
+	Skill,
 };
 
 enum class WeaponType
 {
 	Sword,
 	Bow,
-	Staff,
+	Staff
+};
+
+enum class ProjectileType
+{
+	Arrow,
+	Fireball,
 };

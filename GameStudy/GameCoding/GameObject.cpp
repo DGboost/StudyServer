@@ -1,16 +1,17 @@
 #include "pch.h"
 #include "GameObject.h"
+#include "Creature.h"
 #include "InputManager.h"
 #include "TimeManager.h"
 #include "ResourceManager.h"
 #include "Flipbook.h"
 #include "CameraComponent.h"
-#include "BoxCollider.h"
 #include "SceneManager.h"
 #include "DevScene.h"
 
 GameObject::GameObject()
 {
+
 }
 
 GameObject::~GameObject()
@@ -47,7 +48,6 @@ void GameObject::Tick()
 void GameObject::Render(HDC hdc)
 {
 	Super::Render(hdc);
-
 }
 
 void GameObject::SetState(ObjectState state)
@@ -68,7 +68,7 @@ void GameObject::SetDir(Dir dir)
 bool GameObject::HasReachedDest()
 {
 	Vec2 dir = (_destPos - _pos);
-	return (dir.Length() < 10.f);
+	return (dir.Length() < 5.f);
 }
 
 bool GameObject::CanGo(Vec2Int cellPos)
@@ -80,7 +80,20 @@ bool GameObject::CanGo(Vec2Int cellPos)
 	return scene->CanGo(cellPos);
 }
 
-void GameObject::SetCellPos(Vec2Int cellPos, bool teleport)
+Dir GameObject::GetLookAtDir(Vec2Int cellPos)
+{
+	Vec2Int dir = cellPos - GetCellPos();
+	if (dir.x > 0)
+		return DIR_RIGHT;
+	else if (dir.x < 0)
+		return DIR_LEFT;
+	else if (dir.y > 0)
+		return DIR_DOWN;
+	else
+		return DIR_UP;
+}
+
+void GameObject::SetCellPos(Vec2Int cellPos, bool teleport /*= false*/)
 {
 	_cellPos = cellPos;
 
@@ -94,3 +107,19 @@ void GameObject::SetCellPos(Vec2Int cellPos, bool teleport)
 		_pos = _destPos;
 }
 
+Vec2Int GameObject::GetFrontCellPos()
+{
+	switch (_dir)
+	{
+		case DIR_DOWN:
+			return _cellPos + Vec2Int{ 0, 1 };
+		case DIR_LEFT:
+			return _cellPos + Vec2Int{ -1, 0 };
+		case DIR_RIGHT:
+			return _cellPos + Vec2Int{ 1, 0 };
+		case DIR_UP:
+			return _cellPos + Vec2Int{ 0, -1 };
+	}
+
+	return _cellPos;
+}

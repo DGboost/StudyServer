@@ -5,13 +5,14 @@
 #include "ResourceManager.h"
 #include "Flipbook.h"
 #include "CameraComponent.h"
-#include "BoxCollider.h"
 #include "SceneManager.h"
 #include "DevScene.h"
+#include "Arrow.h"
+#include "HitEffect.h"
 
 Player::Player()
 {
-	Player::_flipbookIdle[DIR_UP] = GET_SINGLE(ResourceManager)->GetFlipbook(L"FB_IdleUp");
+	_flipbookIdle[DIR_UP] = GET_SINGLE(ResourceManager)->GetFlipbook(L"FB_IdleUp");
 	_flipbookIdle[DIR_DOWN] = GET_SINGLE(ResourceManager)->GetFlipbook(L"FB_IdleDown");
 	_flipbookIdle[DIR_LEFT] = GET_SINGLE(ResourceManager)->GetFlipbook(L"FB_IdleLeft");
 	_flipbookIdle[DIR_RIGHT] = GET_SINGLE(ResourceManager)->GetFlipbook(L"FB_IdleRight");
@@ -26,8 +27,20 @@ Player::Player()
 	_flipbookAttack[DIR_LEFT] = GET_SINGLE(ResourceManager)->GetFlipbook(L"FB_AttackLeft");
 	_flipbookAttack[DIR_RIGHT] = GET_SINGLE(ResourceManager)->GetFlipbook(L"FB_AttackRight");
 
+	_flipbookBow[DIR_UP] = GET_SINGLE(ResourceManager)->GetFlipbook(L"FB_BowUp");
+	_flipbookBow[DIR_DOWN] = GET_SINGLE(ResourceManager)->GetFlipbook(L"FB_BowDown");
+	_flipbookBow[DIR_LEFT] = GET_SINGLE(ResourceManager)->GetFlipbook(L"FB_BowLeft");
+	_flipbookBow[DIR_RIGHT] = GET_SINGLE(ResourceManager)->GetFlipbook(L"FB_BowRight");
+
+	_flipbookStaff[DIR_UP] = GET_SINGLE(ResourceManager)->GetFlipbook(L"FB_StaffUp");
+	_flipbookStaff[DIR_DOWN] = GET_SINGLE(ResourceManager)->GetFlipbook(L"FB_StaffDown");
+	_flipbookStaff[DIR_LEFT] = GET_SINGLE(ResourceManager)->GetFlipbook(L"FB_StaffLeft");
+	_flipbookStaff[DIR_RIGHT] = GET_SINGLE(ResourceManager)->GetFlipbook(L"FB_StaffRight");
+
 	CameraComponent* camera = new CameraComponent();
 	AddComponent(camera);
+
+	_stat.attack = 100;
 }
 
 Player::~Player()
@@ -48,18 +61,12 @@ void Player::BeginPlay()
 void Player::Tick()
 {
 	Super::Tick();
-
-	switch (_state)
+	
+	// 활 쿨다운 업데이트
+	if (_bowCooldown > 0)
 	{
-	case ObjectState::Idle:
-		TickIdle();
-		break;
-	case ObjectState::Move:
-		TickMove();
-		break;
-	case ObjectState::Skill:
-		TickSkill();
-		break;
+		float deltaTime = GET_SINGLE(TimeManager)->GetDeltaTime();
+		_bowCooldown = max(0.0f, _bowCooldown - deltaTime);
 	}
 }
 
@@ -76,7 +83,7 @@ void Player::TickIdle()
 	_keyPressed = true;
 	Vec2Int deltaXY[4] = { {0, -1}, {0, 1}, {-1, 0}, {1, 0} };
 
-	if (GET_SINGLE(InputManager)->GetButton(KeyType::W))
+	if (GET_SINGLE(InputManager)->GetButton(KeyType::Up))
 	{
 		SetDir(DIR_UP);
 
@@ -87,7 +94,7 @@ void Player::TickIdle()
 			SetState(ObjectState::Move);
 		}
 	}
-	else  if (GET_SINGLE(InputManager)->GetButton(KeyType::S))
+	else  if (GET_SINGLE(InputManager)->GetButton(KeyType::Down))
 	{
 		SetDir(DIR_DOWN);
 
@@ -98,7 +105,7 @@ void Player::TickIdle()
 			SetState(ObjectState::Move);
 		}
 	}
-	else if (GET_SINGLE(InputManager)->GetButton(KeyType::A))
+	else if (GET_SINGLE(InputManager)->GetButton(KeyType::Left))
 	{
 		SetDir(DIR_LEFT);
 		Vec2Int nextPos = _cellPos + deltaXY[_dir];
@@ -108,7 +115,7 @@ void Player::TickIdle()
 			SetState(ObjectState::Move);
 		}
 	}
-	else if (GET_SINGLE(InputManager)->GetButton(KeyType::D))
+	else if (GET_SINGLE(InputManager)->GetButton(KeyType::Right))
 	{
 		SetDir(DIR_RIGHT);
 		Vec2Int nextPos = _cellPos + deltaXY[_dir];
@@ -123,6 +130,47 @@ void Player::TickIdle()
 		_keyPressed = false;
 		if (_state == ObjectState::Idle)
 			UpdateAnimation();
+	}
+
+	if (GET_SINGLE(InputManager)->GetButtonDown(KeyType::KEY_1))
+	{
+		SetWeaponType(WeaponType::Sword);
+	}
+	else if (GET_SINGLE(InputManager)->GetButtonDown(KeyType::KEY_2))
+	{
+		SetWeaponType(WeaponType::Bow);
+	}
+	else if (GET_SINGLE(InputManager)->GetButtonDown(KeyType::KEY_3))
+	{
+		SetWeaponType(WeaponType::Staff);
+	}
+	if (GET_SINGLE(InputManager)->GetButton(KeyType::A))
+	{
+		// 검이나 스태프는 일반 스킬 사용
+		if (_weaponType != WeaponType::Bow)
+		{
+			SetState(ObjectState::Skill);
+		}
+		// 활은 쿨다운이 0일 때만 바로 화살 발사
+		else if (_bowCooldown <= 0)
+		{			DevScene* scene = dynamic_cast<DevScene*>(GET_SINGLE(SceneManager)->GetCurrentScene());
+			if (scene)
+			{
+				Arrow* arrow = scene->SpawnObject<Arrow>(_cellPos);
+				arrow->SetDir(_dir);
+				arrow->SetOwner(this);
+				
+				// 플레이어의 공격력을 화살에 부여
+				int32 arrowAttack = _stat.attack / 2; // 플레이어 공격력의 절반을 화살에 부여
+				arrow->SetAttack(arrowAttack);
+				
+				// 화살 발사 후 쿨다운 적용
+				_bowCooldown = _bowCooldownMax;
+				
+				// 발사 애니메이션 재생
+				SetState(ObjectState::Skill);
+			}
+		}
 	}
 }
 
@@ -158,7 +206,32 @@ void Player::TickMove()
 
 void Player::TickSkill()
 {
+	if (_flipbook == nullptr)
+		return;
 
+	// TODO : Damage?
+	if (IsAnimationEnded())
+	{
+		DevScene* scene = dynamic_cast<DevScene*>(GET_SINGLE(SceneManager)->GetCurrentScene());
+		if (scene == nullptr)
+			return;
+
+		if (_weaponType == WeaponType::Sword)
+		{
+			Creature* creature = scene->GetCreatureAt(GetFrontCellPos());
+			if (creature)
+			{
+				scene->SpawnObject<HitEffect>(GetFrontCellPos());
+				creature->OnDamaged(this);
+			}
+		}		else if (_weaponType == WeaponType::Bow)
+		{
+			// 애니메이션 종료 시 Idle 상태로만 전환
+			// 실제 화살 발사는 TickIdle에서 처리
+		}
+
+		SetState(ObjectState::Idle);
+	}
 }
 
 void Player::UpdateAnimation()
@@ -175,7 +248,12 @@ void Player::UpdateAnimation()
 		SetFlipbook(_flipbookMove[_dir]);
 		break;
 	case ObjectState::Skill:
-		SetFlipbook(_flipbookAttack[_dir]);
+		if (_weaponType == WeaponType::Sword)
+			SetFlipbook(_flipbookAttack[_dir]);
+		else if (_weaponType == WeaponType::Bow)
+			SetFlipbook(_flipbookBow[_dir]);
+		else
+			SetFlipbook(_flipbookStaff[_dir]);
 		break;
 	}
 }

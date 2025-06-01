@@ -1,10 +1,10 @@
 #include "pch.h"
 #include "Scene.h"
 #include "Actor.h"
+#include "Creature.h"
 #include "UI.h"
 #include "TimeManager.h"
 #include "SceneManager.h"
-#include "CollisionManager.h"
 
 Scene::Scene()
 {
@@ -39,10 +39,8 @@ void Scene::Update()
 {
 	float deltaTime = GET_SINGLE(TimeManager)->GetDeltaTime();
 
-	GET_SINGLE(CollisionManager)->Update();
-
-	// 거리 = 시간 * 속도
-	for (const vector<Actor*>& actors : _actors)
+	// 복사
+	for (const vector<Actor*> actors : _actors)
 		for (Actor* actor : actors)
 			actor->Tick();
 
@@ -52,6 +50,12 @@ void Scene::Update()
 
 void Scene::Render(HDC hdc)
 {
+	vector<Actor*>& actors = _actors[LAYER_OBJECT];
+	std::sort(actors.begin(), actors.end(), [=](Actor* a, Actor* b)
+	{
+		return a->GetPos().y < b->GetPos().y;
+	});
+
 	for (const vector<Actor*>& actors : _actors)
 		for (Actor* actor : actors)
 			actor->Render(hdc);
@@ -75,4 +79,17 @@ void Scene::RemoveActor(Actor* actor)
 
 	vector<Actor*>& v = _actors[actor->GetLayer()];
 	v.erase(std::remove(v.begin(), v.end(), actor), v.end());
+}
+
+Creature* Scene::GetCreatureAt(Vec2Int cellPos)
+{
+	for (Actor* actor : _actors[LAYER_OBJECT])
+	{
+		// GameObjectType
+		Creature* creature = dynamic_cast<Creature*>(actor);
+		if (creature && creature->GetCellPos() == cellPos)
+			return creature;
+	}
+
+	return nullptr;
 }

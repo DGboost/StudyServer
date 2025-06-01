@@ -3,7 +3,7 @@
 class Component;
 class Collider;
 
-class Actor
+class Actor : public enable_shared_from_this<Actor>
 {
 public:
 	Actor();
@@ -21,8 +21,6 @@ public:
 
 	void AddComponent(Component* component);
 	void RemoveComponent(Component* component);
-
-	Component* GetCollider();
 
 	// OnCollisionEnter2D / OnCollisionExit2D
 	virtual void OnComponentBeginOverlap(Collider* collider, Collider* other);

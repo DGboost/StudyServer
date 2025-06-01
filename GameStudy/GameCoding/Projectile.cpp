@@ -3,28 +3,32 @@
 
 Projectile::Projectile()
 {
+
 }
 
 Projectile::~Projectile()
 {
+
 }
 
 void Projectile::BeginPlay()
 {
 	Super::BeginPlay();
+
 }
 
 void Projectile::Tick()
 {
 	Super::Tick();
+
 }
 
 void Projectile::Render(HDC hdc)
 {
 	Super::Render(hdc);
+
 }
 
-void Projectile::UpdateAnimation()
+void Projectile::OnCollision(GameObject* other)
 {
-
 }

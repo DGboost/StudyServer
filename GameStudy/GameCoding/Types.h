@@ -11,12 +11,6 @@ using uint16 = unsigned __int16;
 using uint32 = unsigned __int32;
 using uint64 = unsigned __int64;
 
-struct Stat
-{
-	int32 hp = 0;
-	int32 maxHp = 0;
-	float speed = 0;
-};
 
 struct Vector
 {
@@ -128,6 +122,27 @@ struct VectorInt
 		ret.x = x * value;
 		ret.y = y * value;
 		return ret;
+	}
+
+	bool operator<(const VectorInt& other) const
+	{
+		if (x != other.x)
+			return x < other.x;
+
+		return y < other.y;
+	}
+
+	bool operator>(const VectorInt& other) const
+	{
+		if (x != other.x)
+			return x > other.x;
+
+		return y > other.y;
+	}
+
+	bool operator==(const VectorInt& other) const
+	{
+		return x == other.x && y == other.y;
 	}
 
 	void operator+=(const VectorInt& other)

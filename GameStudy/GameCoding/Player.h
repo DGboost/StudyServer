@@ -1,12 +1,15 @@
 #pragma once
 
+#include "FlipbookActor.h"
 #include "Creature.h"
+
+class Flipbook;
+class Collider;
+class BoxCollider;
 
 class Player : public Creature
 {
-public:
 	using Super = Creature;
-
 public:
 	Player();
 	virtual ~Player() override;
@@ -16,17 +19,26 @@ public:
 	virtual void Render(HDC hdc) override;
 
 private:
-
 	virtual void TickIdle() override;
 	virtual void TickMove() override;
 	virtual void TickSkill() override;
+
 	virtual void UpdateAnimation() override;
+
+	void SetWeaponType(WeaponType weaponType) { _weaponType = weaponType; }
+	WeaponType GetWeaponType() { return _weaponType; }
 
 private:
 	Flipbook* _flipbookIdle[4] = {};
 	Flipbook* _flipbookMove[4] = {};
 	Flipbook* _flipbookAttack[4] = {};
-
+	Flipbook* _flipbookBow[4] = {};
+	Flipbook* _flipbookStaff[4] = {};
 	bool _keyPressed = false;
+	WeaponType _weaponType = WeaponType::Sword;
+	
+	// 활 공격 쿨다운 관련 변수
+	float _bowCooldown = 0.0f;       // 현재 쿨다운 시간
+	float _bowCooldownMax = 0.5f;    // 최대 쿨다운 시간(연사 간격)
 };
 

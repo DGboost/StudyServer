@@ -39,9 +39,6 @@
     <Filter Include="소스 파일\04. Resources\Game">
       <UniqueIdentifier>{badc758a-eb0d-4d2b-bcbd-ee5f03bba59c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="소스 파일\02. Scene\Game\Fortress">
-      <UniqueIdentifier>{2fda0feb-22ef-49c0-a0bf-35e28e4946c7}</UniqueIdentifier>
-    </Filter>
     <Filter Include="소스 파일\01. Manager\Game">
       <UniqueIdentifier>{a0e560d5-d55b-4329-aa4f-b7cbea9b550e}</UniqueIdentifier>
     </Filter>
@@ -54,17 +51,11 @@
     <Filter Include="소스 파일\05. Component\Game">
       <UniqueIdentifier>{933d690c-1f05-472c-a9e7-595734e21b65}</UniqueIdentifier>
     </Filter>
-    <Filter Include="소스 파일\05. Component\Collision">
-      <UniqueIdentifier>{2e719533-49cc-4383-b6a4-8e7db65e480e}</UniqueIdentifier>
-    </Filter>
     <Filter Include="소스 파일\05. Component\Camera">
       <UniqueIdentifier>{03f6b8d6-659d-4bac-8a08-db676f2c090b}</UniqueIdentifier>
     </Filter>
     <Filter Include="소스 파일\06. UI">
       <UniqueIdentifier>{d61e8b93-6ec1-4b93-af69-3e020cfc1dc8}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="소스 파일\06. UI\Game">
-      <UniqueIdentifier>{b72f630e-863f-4c00-911d-7c9e02626a9a}</UniqueIdentifier>
     </Filter>
     <Filter Include="소스 파일\04. Resources\Paper2D">
       <UniqueIdentifier>{841f4e0b-94fd-4add-a3a4-829175d40d69}</UniqueIdentifier>
@@ -73,13 +64,13 @@
       <UniqueIdentifier>{c079b581-5a66-4c37-8aac-111dbf48d353}</UniqueIdentifier>
     </Filter>
     <Filter Include="소스 파일\03. Objects\Game\Creature">
-      <UniqueIdentifier>{2d09a578-7745-4353-b8e2-2e580ea76b50}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="소스 파일\03. Objects\Game\Effect">
-      <UniqueIdentifier>{354761a7-636a-410f-b9d5-73babfa27a0f}</UniqueIdentifier>
+      <UniqueIdentifier>{74985110-bd07-44b3-a144-7fac8495cf4d}</UniqueIdentifier>
     </Filter>
     <Filter Include="소스 파일\03. Objects\Game\Projectile">
-      <UniqueIdentifier>{3c7546e6-31da-4f75-adf6-5ee471341afe}</UniqueIdentifier>
+      <UniqueIdentifier>{3c9a35ee-2cf5-491d-91f2-bc7e33140a0d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\03. Objects\Game\Effect">
+      <UniqueIdentifier>{5985ac07-8f66-4d37-b14f-9b90895edc39}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -128,9 +119,6 @@
     <ClInclude Include="DevScene.h">
       <Filter>소스 파일\02. Scene\Game</Filter>
     </ClInclude>
-    <ClInclude Include="Object.h">
-      <Filter>소스 파일\03. Objects</Filter>
-    </ClInclude>
     <ClInclude Include="EditScene.h">
       <Filter>소스 파일\02. Scene\Game</Filter>
     </ClInclude>
@@ -158,18 +146,6 @@
     <ClInclude Include="CameraComponent.h">
       <Filter>소스 파일\05. Component\Camera</Filter>
     </ClInclude>
-    <ClInclude Include="Collider.h">
-      <Filter>소스 파일\05. Component\Collision</Filter>
-    </ClInclude>
-    <ClInclude Include="BoxCollider.h">
-      <Filter>소스 파일\05. Component\Collision</Filter>
-    </ClInclude>
-    <ClInclude Include="SphereCollider.h">
-      <Filter>소스 파일\05. Component\Collision</Filter>
-    </ClInclude>
-    <ClInclude Include="CollisionManager.h">
-      <Filter>소스 파일\01. Manager</Filter>
-    </ClInclude>
     <ClInclude Include="UI.h">
       <Filter>소스 파일\06. UI</Filter>
     </ClInclude>
@@ -178,9 +154,6 @@
     </ClInclude>
     <ClInclude Include="Panel.h">
       <Filter>소스 파일\06. UI</Filter>
-    </ClInclude>
-    <ClInclude Include="TestPanel.h">
-      <Filter>소스 파일\06. UI\Game</Filter>
     </ClInclude>
     <ClInclude Include="TilemapActor.h">
       <Filter>소스 파일\03. Objects\Unreal</Filter>
@@ -209,20 +182,23 @@
     <ClInclude Include="Player.h">
       <Filter>소스 파일\03. Objects\Game\Creature</Filter>
     </ClInclude>
-    <ClInclude Include="Creature.h">
-      <Filter>소스 파일\03. Objects\Game\Creature</Filter>
-    </ClInclude>
     <ClInclude Include="Monster.h">
       <Filter>소스 파일\03. Objects\Game\Creature</Filter>
     </ClInclude>
-    <ClInclude Include="HitEffect.h">
-      <Filter>소스 파일\03. Objects\Game\Effect</Filter>
+    <ClInclude Include="Creature.h">
+      <Filter>소스 파일\03. Objects\Game\Creature</Filter>
+    </ClInclude>
+    <ClInclude Include="Projectile.h">
+      <Filter>소스 파일\03. Objects\Game\Projectile</Filter>
     </ClInclude>
     <ClInclude Include="Arrow.h">
       <Filter>소스 파일\03. Objects\Game\Projectile</Filter>
     </ClInclude>
-    <ClInclude Include="Projectile.h">
-      <Filter>소스 파일\03. Objects\Game\Projectile</Filter>
+    <ClInclude Include="ObjectManager.h">
+      <Filter>소스 파일\01. Manager\Game</Filter>
+    </ClInclude>
+    <ClInclude Include="HitEffect.h">
+      <Filter>소스 파일\03. Objects\Game\Effect</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -266,9 +242,6 @@
     <ClCompile Include="DevScene.cpp">
       <Filter>소스 파일\02. Scene\Game</Filter>
     </ClCompile>
-    <ClCompile Include="Object.cpp">
-      <Filter>소스 파일\03. Objects</Filter>
-    </ClCompile>
     <ClCompile Include="EditScene.cpp">
       <Filter>소스 파일\02. Scene\Game</Filter>
     </ClCompile>
@@ -293,18 +266,6 @@
     <ClCompile Include="CameraComponent.cpp">
       <Filter>소스 파일\05. Component\Camera</Filter>
     </ClCompile>
-    <ClCompile Include="Collider.cpp">
-      <Filter>소스 파일\05. Component\Collision</Filter>
-    </ClCompile>
-    <ClCompile Include="BoxCollider.cpp">
-      <Filter>소스 파일\05. Component\Collision</Filter>
-    </ClCompile>
-    <ClCompile Include="SphereCollider.cpp">
-      <Filter>소스 파일\05. Component\Collision</Filter>
-    </ClCompile>
-    <ClCompile Include="CollisionManager.cpp">
-      <Filter>소스 파일\01. Manager</Filter>
-    </ClCompile>
     <ClCompile Include="UI.cpp">
       <Filter>소스 파일\06. UI</Filter>
     </ClCompile>
@@ -313,9 +274,6 @@
     </ClCompile>
     <ClCompile Include="Panel.cpp">
       <Filter>소스 파일\06. UI</Filter>
-    </ClCompile>
-    <ClCompile Include="TestPanel.cpp">
-      <Filter>소스 파일\06. UI\Game</Filter>
     </ClCompile>
     <ClCompile Include="TilemapActor.cpp">
       <Filter>소스 파일\03. Objects\Unreal</Filter>
@@ -344,20 +302,23 @@
     <ClCompile Include="Player.cpp">
       <Filter>소스 파일\03. Objects\Game\Creature</Filter>
     </ClCompile>
-    <ClCompile Include="Creature.cpp">
-      <Filter>소스 파일\03. Objects\Game\Creature</Filter>
-    </ClCompile>
     <ClCompile Include="Monster.cpp">
       <Filter>소스 파일\03. Objects\Game\Creature</Filter>
     </ClCompile>
-    <ClCompile Include="HitEffect.cpp">
-      <Filter>소스 파일\03. Objects\Game\Effect</Filter>
+    <ClCompile Include="Creature.cpp">
+      <Filter>소스 파일\03. Objects\Game\Creature</Filter>
+    </ClCompile>
+    <ClCompile Include="Projectile.cpp">
+      <Filter>소스 파일\03. Objects\Game\Projectile</Filter>
     </ClCompile>
     <ClCompile Include="Arrow.cpp">
       <Filter>소스 파일\03. Objects\Game\Projectile</Filter>
     </ClCompile>
-    <ClCompile Include="Projectile.cpp">
-      <Filter>소스 파일\03. Objects\Game\Projectile</Filter>
+    <ClCompile Include="ObjectManager.cpp">
+      <Filter>소스 파일\01. Manager\Game</Filter>
+    </ClCompile>
+    <ClCompile Include="HitEffect.cpp">
+      <Filter>소스 파일\03. Objects\Game\Effect</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
