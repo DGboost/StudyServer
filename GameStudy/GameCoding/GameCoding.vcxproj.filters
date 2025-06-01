@@ -200,6 +200,9 @@
     <ClInclude Include="HitEffect.h">
       <Filter>소스 파일\03. Objects\Game\Effect</Filter>
     </ClInclude>
+    <ClInclude Include="Fireball.h">
+      <Filter>소스 파일\03. Objects\Game\Projectile</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="GameCoding.rc">
@@ -319,6 +322,9 @@
     </ClCompile>
     <ClCompile Include="HitEffect.cpp">
       <Filter>소스 파일\03. Objects\Game\Effect</Filter>
+    </ClCompile>
+    <ClCompile Include="Fireball.cpp">
+      <Filter>소스 파일\03. Objects\Game\Projectile</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

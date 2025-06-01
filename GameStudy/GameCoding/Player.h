@@ -33,12 +33,15 @@ private:
 	Flipbook* _flipbookMove[4] = {};
 	Flipbook* _flipbookAttack[4] = {};
 	Flipbook* _flipbookBow[4] = {};
-	Flipbook* _flipbookStaff[4] = {};
-	bool _keyPressed = false;
+	Flipbook* _flipbookStaff[4] = {};	bool _keyPressed = false;
 	WeaponType _weaponType = WeaponType::Sword;
 	
 	// 활 공격 쿨다운 관련 변수
 	float _bowCooldown = 0.0f;       // 현재 쿨다운 시간
 	float _bowCooldownMax = 0.5f;    // 최대 쿨다운 시간(연사 간격)
+	
+	// 스태프(파이어볼) 공격 쿨다운 관련 변수
+	float _staffCooldown = 0.0f;     // 현재 쿨다운 시간
+	float _staffCooldownMax = 1.0f;  // 최대 쿨다운 시간(연사 간격, 파이어볼은 더 강력해서 쿨다운이 김)
 };
 

@@ -8,6 +8,7 @@
 #include "SceneManager.h"
 #include "DevScene.h"
 #include "Arrow.h"
+#include "Fireball.h"
 #include "HitEffect.h"
 
 Player::Player()
@@ -62,11 +63,18 @@ void Player::Tick()
 {
 	Super::Tick();
 	
+	float deltaTime = GET_SINGLE(TimeManager)->GetDeltaTime();
+	
 	// 활 쿨다운 업데이트
 	if (_bowCooldown > 0)
 	{
-		float deltaTime = GET_SINGLE(TimeManager)->GetDeltaTime();
 		_bowCooldown = max(0.0f, _bowCooldown - deltaTime);
+	}
+	
+	// 스태프(파이어볼) 쿨다운 업데이트
+	if (_staffCooldown > 0)
+	{
+		_staffCooldown = max(0.0f, _staffCooldown - deltaTime);
 	}
 }
 
@@ -143,17 +151,17 @@ void Player::TickIdle()
 	else if (GET_SINGLE(InputManager)->GetButtonDown(KeyType::KEY_3))
 	{
 		SetWeaponType(WeaponType::Staff);
-	}
-	if (GET_SINGLE(InputManager)->GetButton(KeyType::A))
+	}	if (GET_SINGLE(InputManager)->GetButton(KeyType::A))
 	{
-		// 검이나 스태프는 일반 스킬 사용
-		if (_weaponType != WeaponType::Bow)
+		// 검은 일반 스킬 사용
+		if (_weaponType == WeaponType::Sword)
 		{
 			SetState(ObjectState::Skill);
 		}
 		// 활은 쿨다운이 0일 때만 바로 화살 발사
-		else if (_bowCooldown <= 0)
-		{			DevScene* scene = dynamic_cast<DevScene*>(GET_SINGLE(SceneManager)->GetCurrentScene());
+		else if (_weaponType == WeaponType::Bow && _bowCooldown <= 0)
+		{			
+			DevScene* scene = dynamic_cast<DevScene*>(GET_SINGLE(SceneManager)->GetCurrentScene());
 			if (scene)
 			{
 				Arrow* arrow = scene->SpawnObject<Arrow>(_cellPos);
@@ -166,6 +174,27 @@ void Player::TickIdle()
 				
 				// 화살 발사 후 쿨다운 적용
 				_bowCooldown = _bowCooldownMax;
+				
+				// 발사 애니메이션 재생
+				SetState(ObjectState::Skill);
+			}
+		}
+		// 스태프는 쿨다운이 0일 때만 바로 파이어볼 발사
+		else if (_weaponType == WeaponType::Staff && _staffCooldown <= 0)
+		{
+			DevScene* scene = dynamic_cast<DevScene*>(GET_SINGLE(SceneManager)->GetCurrentScene());
+			if (scene)
+			{
+				Fireball* fireball = scene->SpawnObject<Fireball>(_cellPos);
+				fireball->SetDir(_dir);
+				fireball->SetOwner(this);
+				
+				// 플레이어의 공격력을 파이어볼에 부여
+				int32 fireballAttack = _stat.attack; // 플레이어 공격력 그대로 부여 (화살보다 강함)
+				fireball->SetAttack(fireballAttack);
+				
+				// 파이어볼 발사 후 쿨다운 적용
+				_staffCooldown = _staffCooldownMax;
 				
 				// 발사 애니메이션 재생
 				SetState(ObjectState::Skill);
@@ -224,10 +253,15 @@ void Player::TickSkill()
 				scene->SpawnObject<HitEffect>(GetFrontCellPos());
 				creature->OnDamaged(this);
 			}
-		}		else if (_weaponType == WeaponType::Bow)
+		}				else if (_weaponType == WeaponType::Bow)
 		{
 			// 애니메이션 종료 시 Idle 상태로만 전환
 			// 실제 화살 발사는 TickIdle에서 처리
+		}
+		else if (_weaponType == WeaponType::Staff)
+		{
+			// 애니메이션 종료 시 Idle 상태로만 전환
+			// 실제 파이어볼 발사는 TickIdle에서 처리
 		}
 
 		SetState(ObjectState::Idle);

@@ -35,6 +35,7 @@ void DevScene::Init()
 	GET_SINGLE(ResourceManager)->LoadTexture(L"Tile", L"Sprite\\Map\\Tile.bmp", RGB(128, 128, 128));
 	GET_SINGLE(ResourceManager)->LoadTexture(L"Sword", L"Sprite\\Item\\Sword.bmp");
 	GET_SINGLE(ResourceManager)->LoadTexture(L"Arrow", L"Sprite\\Item\\Arrow.bmp", RGB(128, 128, 128));
+	GET_SINGLE(ResourceManager)->LoadTexture(L"Fireball", L"Sprite\\Monster\\Snake.bmp", RGB(128, 128, 128));
 	GET_SINGLE(ResourceManager)->LoadTexture(L"Potion", L"Sprite\\UI\\Mp.bmp");
 	GET_SINGLE(ResourceManager)->LoadTexture(L"PlayerDown", L"Sprite\\Player\\PlayerDown.bmp", RGB(128, 128, 128));
 	GET_SINGLE(ResourceManager)->LoadTexture(L"PlayerUp", L"Sprite\\Player\\PlayerUp.bmp", RGB(128, 128, 128));
@@ -257,7 +258,7 @@ void DevScene::LoadMonster()
 
 void DevScene::LoadProjectiles()
 {
-	// MOVE
+	// ARROW
 	{
 		Texture* texture = GET_SINGLE(ResourceManager)->GetTexture(L"Arrow");
 		Flipbook* fb = GET_SINGLE(ResourceManager)->CreateFlipbook(L"FB_ArrowUp");
@@ -277,6 +278,27 @@ void DevScene::LoadProjectiles()
 		Texture* texture = GET_SINGLE(ResourceManager)->GetTexture(L"Arrow");
 		Flipbook* fb = GET_SINGLE(ResourceManager)->CreateFlipbook(L"FB_ArrowRight");
 		fb->SetInfo({ texture, L"FB_ArrowRight", {100, 100}, 0, 0, 2, 0.5f });
+	}
+
+	// FIREBALL
+	{
+		Texture* texture = GET_SINGLE(ResourceManager)->GetTexture(L"Fireball");
+		Flipbook* fb = GET_SINGLE(ResourceManager)->CreateFlipbook(L"FB_FireballUp");
+		fb->SetInfo({ texture, L"FB_ArrowUp", {100, 100}, 1, 1, 3, 4.5f });
+	}
+	{
+		Texture* texture = GET_SINGLE(ResourceManager)->GetTexture(L"Fireball");
+		Flipbook* fb = GET_SINGLE(ResourceManager)->CreateFlipbook(L"FB_FireballDown");
+		fb->SetInfo({ texture, L"FB_FireballDown", {100, 100}, 1, 1, 4, 0.5f });
+	}
+	{
+		Texture* texture = GET_SINGLE(ResourceManager)->GetTexture(L"Fireball");
+		Flipbook* fb = GET_SINGLE(ResourceManager)->CreateFlipbook(L"FB_FireballLeft");
+		fb->SetInfo({ texture, L"FB_FireballLeft", {100, 100}, 1, 1, 4, 0.5f });
+	}	{
+		Texture* texture = GET_SINGLE(ResourceManager)->GetTexture(L"Fireball");
+		Flipbook* fb = GET_SINGLE(ResourceManager)->CreateFlipbook(L"FB_FireballRight");
+		fb->SetInfo({ texture, L"FB_FireballRight", {100, 100}, 1, 1, 4, 0.5f });
 	}
 }
 
@@ -335,9 +357,9 @@ Player* DevScene::FindClosestPlayer(Vec2Int pos)
 bool DevScene::FindPath(Vec2Int src, Vec2Int dest, vector<Vec2Int>& path, int32 maxDepth)
 {
 	// F = G + H
-	// F = ÃÖÁ¾ Á¡¼ö(ÀÛÀ» ¼ö·Ï ÁÁÀ½)
-	// G = ½ÃÀÛÁ¡¿¡¼­ ÇØ´ç ÁÂÇ¥±îÁö ÀÌµ¿ÇÏ´Âµ¥ µå´Â ºñ¿ë
-	// H = ¸ñÀûÁö¿¡¼­ ÇØ´ç ÁÂÇ¥±îÁö ÀÌµ¿ÇÏ´Âµ¥ µå´Â ºñ¿ë
+	// F = ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½(ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½)
+	// G = ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ø´ï¿½ ï¿½ï¿½Ç¥ï¿½ï¿½ï¿½ï¿½ ï¿½Ìµï¿½ï¿½Ï´Âµï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
+	// H = ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ø´ï¿½ ï¿½ï¿½Ç¥ï¿½ï¿½ï¿½ï¿½ ï¿½Ìµï¿½ï¿½Ï´Âµï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
 	int32 depth = abs(src.y - dest.y) + abs(src.x - dest.x);
 	if (depth >= maxDepth)
 		return false;
@@ -346,7 +368,7 @@ bool DevScene::FindPath(Vec2Int src, Vec2Int dest, vector<Vec2Int>& path, int32 
 	map<Vec2Int, int32> best;
 	map<Vec2Int, Vec2Int> parent;
 
-	// ÃÊ±â°ª
+	// ï¿½Ê±â°ª
 	{
 		int32 cost = abs(dest.y - src.y) + abs(dest.x - src.x);
 
@@ -367,22 +389,22 @@ bool DevScene::FindPath(Vec2Int src, Vec2Int dest, vector<Vec2Int>& path, int32 
 
 	while (pq.empty() == false)
 	{
-		// Á¦ÀÏ ÁÁÀº ÈÄº¸¸¦ Ã£´Â´Ù
+		// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Äºï¿½ï¿½ï¿½ Ã£ï¿½Â´ï¿½
 		PQNode node = pq.top();
 		pq.pop();
 
-		// ´õ ÂªÀº °æ·Î¸¦ µÚ´Ê°Ô Ã£¾Ò´Ù¸é ½ºÅµ
+		// ï¿½ï¿½ Âªï¿½ï¿½ ï¿½ï¿½Î¸ï¿½ ï¿½Ú´Ê°ï¿½ Ã£ï¿½Ò´Ù¸ï¿½ ï¿½ï¿½Åµ
 		if (best[node.pos] < node.cost)
 			continue;
 
-		// ¸ñÀûÁö¿¡ µµÂøÇßÀ¸¸é ¹Ù·Î Á¾·á
+		// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ù·ï¿½ ï¿½ï¿½ï¿½ï¿½
 		if (node.pos == dest)
 		{
 			found = true;
 			break;
 		}
 
-		// ¹æ¹®
+		// ï¿½æ¹®
 		for (int32 dir = 0; dir < 4; dir++)
 		{
 			Vec2Int nextPos = node.pos + front[dir];
@@ -398,12 +420,12 @@ bool DevScene::FindPath(Vec2Int src, Vec2Int dest, vector<Vec2Int>& path, int32 
 			int32 bestValue = best[nextPos];
 			if (bestValue != 0)
 			{
-				// ´Ù¸¥ °æ·Î¿¡¼­ ´õ ºü¸¥ ±æÀ» Ã£¾ÒÀ¸¸é ½ºÅµ
+				// ï¿½Ù¸ï¿½ ï¿½ï¿½Î¿ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Ã£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Åµ
 				if (bestValue <= cost)
 					continue;
 			}
 
-			// ¿¹¾à ÁøÇà
+			// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 			best[nextPos] = cost;
 			pq.push(PQNode(cost, nextPos));
 			parent[nextPos] = node.pos;
@@ -419,7 +441,7 @@ bool DevScene::FindPath(Vec2Int src, Vec2Int dest, vector<Vec2Int>& path, int32 
 			Vec2Int pos = item.first;
 			int32 score = item.second;
 
-			// µ¿Á¡ÀÌ¶ó¸é, ÃÖÃÊ À§Ä¡¿¡¼­ °¡Àå ´ú ÀÌµ¿ÇÏ´Â ÂÊÀ¸·Î
+			// ï¿½ï¿½ï¿½ï¿½ï¿½Ì¶ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Ìµï¿½ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 			if (bestScore == score)
 			{
 				int32 dist1 = abs(dest.x - src.x) + abs(dest.y - src.y);
@@ -442,7 +464,7 @@ bool DevScene::FindPath(Vec2Int src, Vec2Int dest, vector<Vec2Int>& path, int32 
 	{
 		path.push_back(pos);
 
-		// ½ÃÀÛÁ¡
+		// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		if (pos == parent[pos])
 			break;
 
@@ -466,7 +488,7 @@ bool DevScene::CanGo(Vec2Int cellPos)
 	if (tile == nullptr)
 		return false;
 
-	// ¸ó½ºÅÍ Ãæµ¹?
+	// ï¿½ï¿½ï¿½ï¿½ ï¿½æµ¹?
 	if (GetCreatureAt(cellPos) != nullptr)
 		return false;
 
@@ -506,7 +528,7 @@ Vec2Int DevScene::GetRandomEmptyCellPos()
 
 	Vec2Int size = tm->GetMapSize();
 
-	// ¸î ¹ø ½Ãµµ?
+	// ï¿½ï¿½ ï¿½ï¿½ ï¿½Ãµï¿½?
 	while (true)
 	{
 		int32 x = rand() % size.x;
