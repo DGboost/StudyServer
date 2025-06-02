@@ -18,6 +18,7 @@ public:
 	virtual void TickSkill() {}
 
 	void SetState(ObjectState state);
+	ObjectState GetState() { return _state; }
 	void SetDir(Dir dir);
 
 	virtual void UpdateAnimation() {}

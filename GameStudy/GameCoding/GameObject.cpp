@@ -101,10 +101,21 @@ void GameObject::SetCellPos(Vec2Int cellPos, bool teleport /*= false*/)
 	if (scene == nullptr)
 		return;
 
-	_destPos = scene->ConvertPos(cellPos);
-
-	if (teleport)
+	// 좌표를 월드 위치로 변환
+	Vec2 worldPos = scene->ConvertPos(cellPos);
+	
+	// 방향에 따라 목적지 갱신 여부 결정
+	// teleport가 true인 경우는 항상 갱신 (초기 위치 설정 등의 경우)
+	if (teleport) 
+	{
+		_destPos = worldPos;
 		_pos = _destPos;
+	}
+	else 
+	{
+		// 목적지 갱신
+		_destPos = worldPos;
+	}
 }
 
 Vec2Int GameObject::GetFrontCellPos()

@@ -36,6 +36,11 @@ private:
 	Flipbook* _flipbookStaff[4] = {};	bool _keyPressed = false;
 	WeaponType _weaponType = WeaponType::Sword;
 	
+	// 이동 지연 관련 변수
+	float _moveDelayTimer = 0.0f;    // 현재 지연 시간
+	float _moveDelayMax = 0.15f;     // 방향 전환 후 이동까지의 지연 시간
+	Dir _lastPressedDir = DIR_DOWN;  // 마지막으로 눌린 방향키
+	
 	// 활 공격 쿨다운 관련 변수
 	float _bowCooldown = 0.0f;       // 현재 쿨다운 시간
 	float _bowCooldownMax = 0.5f;    // 최대 쿨다운 시간(연사 간격)
