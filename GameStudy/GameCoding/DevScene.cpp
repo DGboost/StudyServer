@@ -284,7 +284,7 @@ void DevScene::LoadProjectiles()
 	{
 		Texture* texture = GET_SINGLE(ResourceManager)->GetTexture(L"Fireball");
 		Flipbook* fb = GET_SINGLE(ResourceManager)->CreateFlipbook(L"FB_FireballUp");
-		fb->SetInfo({ texture, L"FB_ArrowUp", {100, 100}, 1, 1, 3, 4.5f });
+		fb->SetInfo({ texture, L"FB_ArrowUp", {100, 100}, 1, 1, 4, 0.5f });
 	}
 	{
 		Texture* texture = GET_SINGLE(ResourceManager)->GetTexture(L"Fireball");
