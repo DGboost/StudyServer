@@ -40,16 +40,18 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			::TranslateMessage(&msg);
 			::DispatchMessage(&msg);
 		}
-		else
-        {
-            uint64 now = ::GetTickCount64();
-
-            //if (now - prevTick >= 30)
+		else        {
+            uint64 now = ::GetTickCount64();            if (now - prevTick >= 16) // 약 60fps로 제한 (16ms)
             {
 				game.Update();
 				game.Render();
 
                 prevTick = now;
+            }
+            else
+            {
+                // CPU 사용률 줄이기 위한 짧은 대기
+                Sleep(1);
             }
         }
     }

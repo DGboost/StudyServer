@@ -39,6 +39,7 @@ public:
 	PlayerRef FindClosestPlayer(Vec2Int pos);
 	bool FindPath(Vec2Int src, Vec2Int dest, vector<Vec2Int>& path, int32 maxDepth = 10);
 	bool CanGo(Vec2Int cellPos);
+	bool CanGo(int32 x, int32 y);
 	Vec2Int GetRandomEmptyCellPos();
 	GameObjectRef GetGameObjectAt(Vec2Int cellPos);
 

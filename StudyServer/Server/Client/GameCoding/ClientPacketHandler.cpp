@@ -129,20 +129,27 @@ void ClientPacketHandler::Handle_S_Move(ServerSessionRef session, BYTE* buffer, 
 	pkt.ParseFromArray(&header[1], size - sizeof(PacketHeader));
 	//
 	const Protocol::ObjectInfo& info = pkt.info();
-
 	DevScene* scene = GET_SINGLE(SceneManager)->GetDevScene();
 	if (scene)
 	{
-		uint64 myPlayerId = GET_SINGLE(SceneManager)->GetMyPlayerId();
-		if (myPlayerId == info.objectid())
-			return;
-
 		GameObject* gameObject = scene->GetObject(info.objectid());
 		if (gameObject)
 		{
+			// 서버 권위적 위치로 동기화
 			gameObject->SetDir(info.dir());
 			gameObject->SetState(info.state());
-			gameObject->SetCellPos(Vec2Int{info.posx(), info.posy()});
+			gameObject->SetCellPos(Vec2Int{info.posx(), info.posy()}, true); // teleport = true로 즉시 이동
+			
+			// 디버그 로그 (내 플레이어가 아닌 경우만)
+			MyPlayer* myPlayer = GET_SINGLE(SceneManager)->GetMyPlayer();
+			if (myPlayer && gameObject != myPlayer)
+			{
+				cout << "Other object " << info.objectid() << " moved to (" << info.posx() << ", " << info.posy() << ")" << endl;
+			}
+		}
+		else
+		{
+			cout << "GameObject not found for S_Move: " << info.objectid() << endl;
 		}
 	}
 }
@@ -154,6 +161,9 @@ SendBufferRef ClientPacketHandler::Make_C_Move()
 	MyPlayer* myPlayer = GET_SINGLE(SceneManager)->GetMyPlayer();
 
 	*pkt.mutable_info() = myPlayer->info;
+
+	// 디버그 로그
+	cout << "Sending C_Move for object " << myPlayer->info.objectid() << " dir: " << myPlayer->info.dir() << " state: " << myPlayer->info.state() << endl;
 
 	return MakeSendBuffer(pkt, C_Move);
 }

@@ -31,12 +31,15 @@ void ServerPacketHandler::Handle_C_Move(GameSessionRef session, BYTE* buffer, in
 	Protocol::C_Move pkt;
 	pkt.ParseFromArray(&header[1], size - sizeof(PacketHeader));
 
+	// ë””ë²„ê·¸ ë¡œê·¸
+	cout << "Received C_Move for object " << pkt.info().objectid() << " dir: " << pkt.info().dir() << " state: " << pkt.info().state() << endl;
+
 	//
 	GameRoomRef room = session->gameRoom.lock();
 	if (room)
 		room->Handle_C_Move(pkt);
 
-	// ·Î±× Âï±â
+	// ï¿½Î±ï¿½ ï¿½ï¿½ï¿½
 }
 
 SendBufferRef ServerPacketHandler::Make_S_TEST(uint64 id, uint32 hp, uint16 attack, vector<BuffData> buffs)

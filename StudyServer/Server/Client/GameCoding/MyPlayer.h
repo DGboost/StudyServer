@@ -19,9 +19,12 @@ private:
 	virtual void TickIdle() override;
 	virtual void TickMove() override;
 	virtual void TickSkill() override;
-
 	void SyncToServer();
 
 private:
-	bool _keyPressed = false;
+	// 이제 사용하지 않는 변수들 제거
+	//bool _keyPressed = false;
+	//bool _prevKeyPressed = false;
+	//uint64 _lastSyncTime = 0;
+	//const uint64 SYNC_INTERVAL = 33;
 };

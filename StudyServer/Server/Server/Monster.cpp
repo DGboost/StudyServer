@@ -39,19 +39,21 @@ void Monster::UpdateIdle()
 {
 	if (room == nullptr)
 		return;
-
-	// Find Player
-	if (_target.lock() == nullptr)
+	// Find Player - 주기적으로만 타겟 업데이트
+	uint64 now = GetTickCount64();
+	if (_target.lock() == nullptr || (now - _lastTargetUpdate >= TARGET_UPDATE_INTERVAL))
+	{
 		_target = room->FindClosestPlayer(GetCellPos());
+		_lastTargetUpdate = now;
+	}
 
 	PlayerRef target = _target.lock();
 	if (target)
 	{
 		Vec2Int dir = target->GetCellPos() - GetCellPos();
-		int32 dist = abs(dir.x) + abs(dir.y);
-		if (dist == 1)
+		int32 dist = abs(dir.x) + abs(dir.y);		if (dist == 1)
 		{
-			SetDir(GetLookAtDir(target->GetCellPos()));
+			SetDir(GetLookAtDir(target->GetCellPos()), true);
 			SetState(SKILL, true);
 			_waitUntil = GetTickCount64() + 1000;
 		}
@@ -59,20 +61,27 @@ void Monster::UpdateIdle()
 		{
 			vector<Vec2Int> path;
 			if (room->FindPath(GetCellPos(), target->GetCellPos(), OUT path))
-			{
-				if (path.size() > 1)
+			{				if (path.size() > 1)
 				{
-					Vec2Int nextPos = path[1];
-					if (room->CanGo(nextPos))
+					Vec2Int nextPos = path[1];					if (room->CanGo(nextPos))
 					{
-						SetDir(GetLookAtDir(nextPos));
-						SetCellPos(nextPos);
-						_waitUntil = GetTickCount64() + 1000;
+						SetDir(GetLookAtDir(nextPos), true);
+						SetCellPos(nextPos, true); // 브로드캐스트 활성화
+						_waitUntil = GetTickCount64() + 200; // 200ms로 더 빠르게
 						SetState(MOVE, true);
+						
+						// 디버그 로그 - 주기적으로만 출력
+						static uint64 lastLogTime = 0;
+						uint64 currentTime = GetTickCount64();
+						if (currentTime - lastLogTime >= 1000) // 1초마다만 로그
+						{
+							cout << "Monster " << info.objectid() << " moving to (" << nextPos.x << ", " << nextPos.y << ")" << endl;
+							lastLogTime = currentTime;
+						}
 					}
 				}
 				else
-					SetCellPos(path[0]);
+					SetCellPos(path[0], true);
 			}
 		}
 	}

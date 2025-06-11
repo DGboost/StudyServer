@@ -24,13 +24,23 @@ int main()
 		make_shared<IocpCore>(),
 		[](){ return make_shared<GameSession>(); }, // TODO : SessionManager 등
 		100);
-
 	assert(service->Start());
+	uint64 lastUpdate = GetTickCount64();
+	const uint64 UPDATE_INTERVAL = 16; // 16ms마다 업데이트 (약 60fps)
 
 	while (true)
 	{
 		service->GetIocpCore()->Dispatch(0);
-		GRoom->Update();
+		
+		uint64 now = GetTickCount64();
+		if (now - lastUpdate >= UPDATE_INTERVAL)
+		{
+			GRoom->Update();
+			lastUpdate = now;
+		}
+		
+		// CPU 사용률 줄이기 위한 짧은 sleep
+		Sleep(1);
 	}
 
 	GThreadManager->Join();
