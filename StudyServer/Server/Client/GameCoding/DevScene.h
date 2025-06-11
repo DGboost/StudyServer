@@ -39,7 +39,6 @@ public:
 	void LoadProjectiles();
 	void LoadEffect();
 	void LoadTilemap();	
-
 	template<typename T>
 	T* SpawnObject(Vec2Int pos)
 	{
@@ -48,12 +47,20 @@ public:
 
 		T* ret = new T();
 		ret->SetCellPos(pos, true);
+		ret->SetLayer(LAYER_OBJECT); // 레이어 명시적 설정
 		AddActor(ret);
 
 		ret->BeginPlay();
+		
+		// 디버그 로그 추가
+		GameObject* obj = dynamic_cast<GameObject*>(ret);
+		if (obj)
+		{
+			cout << "SpawnObject: Type=" << typeid(T).name() << " ID=" << obj->info.objectid() << " at (" << pos.x << ", " << pos.y << ")" << endl;
+		}
 
 		return ret;
-	} 
+	}
 
 	template<typename T>
 	T* SpawnObjectAtRandomPos()

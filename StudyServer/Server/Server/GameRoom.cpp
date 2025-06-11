@@ -19,9 +19,14 @@ GameRoom::~GameRoom()
 void GameRoom::Init()
 {
 	MonsterRef monster = GameObject::CreateMonster();
-	monster->info.set_posx(8);
-	monster->info.set_posy(8);
+	// SetCellPos 메서드를 사용하여 일관성 있게 위치 설정
+	monster->SetCellPos(Vec2Int{8, 8}, false);
+	// 초기 상태와 방향 설정
+	monster->info.set_state(IDLE);
+	monster->info.set_dir(DIR_DOWN);
 	AddObject(monster);
+	
+	cout << "Monster created at position (8, 8) with ID: " << monster->info.objectid() << endl;
 
 	_tilemap.LoadFile(L"C:\\Users\\IUBOO\\source\\repos\\StudyServer\\Server\\Client\\Resources\\Tilemap\\Tilemap_01.txt");
 }
@@ -52,10 +57,12 @@ void GameRoom::EnterRoom(GameSessionRef session)
 	session->gameRoom = GetRoomRef();
 	session->player = player;
 	player->session = session;
-
 	// TEMP
 	player->info.set_posx(5);
 	player->info.set_posy(5);
+	// 픽셀 위치도 설정 (타일 중앙)
+	player->info.set_worldx(5 * 48.0f + 24.0f);
+	player->info.set_worldy(5 * 48.0f + 24.0f);
 
 	// ������ Ŭ�󿡰� ������ �����ֱ�
 	{
@@ -117,11 +124,20 @@ void GameRoom::Handle_C_Move(Protocol::C_Move& pkt)
 	uint64 id = pkt.info().objectid();
 	GameObjectRef gameObject = FindObject(id);
 	if (gameObject == nullptr)
+	{
+		cout << "Object not found for move request: " << id << endl;
 		return;
+	}
 
 	// 클라이언트에서 받은 상태 확인
 	ObjectState clientState = pkt.info().state();
 	Dir moveDir = pkt.info().dir();
+	
+	// 클라이언트가 예측한 위치
+	float predictedX = pkt.predictedx();
+	float predictedY = pkt.predictedy();
+	
+	cout << "Received move request from player " << id << " - State: " << clientState << " Dir: " << moveDir << endl;
 	
 	if (clientState == IDLE)
 	{
@@ -131,6 +147,7 @@ void GameRoom::Handle_C_Move(Protocol::C_Move& pkt)
 		
 		SendBufferRef sendBuffer = ServerPacketHandler::Make_S_Move(gameObject->info);
 		Broadcast(sendBuffer);
+		cout << "Player " << id << " state updated to IDLE" << endl;
 		return;
 	}
 	
@@ -158,7 +175,9 @@ void GameRoom::Handle_C_Move(Protocol::C_Move& pkt)
 		break;
 	}
 	
-	// 맵 경계 및 충돌 검사
+	cout << "Player " << id << " move request: (" << currentX << ", " << currentY << ") -> (" << newX << ", " << newY << ")" << endl;
+	
+	// 맵 경계 및 충돌 검사 - 더 관대하게
 	if (CanGo(newX, newY))
 	{
 		// 이동 허용 - 오브젝트 정보 업데이트
@@ -167,18 +186,34 @@ void GameRoom::Handle_C_Move(Protocol::C_Move& pkt)
 		gameObject->info.set_posx(newX);
 		gameObject->info.set_posy(newY);
 		
-		// 모든 클라이언트에게 이동 정보 브로드캐스트
-		SendBufferRef sendBuffer = ServerPacketHandler::Make_S_Move(gameObject->info);
-		Broadcast(sendBuffer);
+		// 픽셀 단위 위치도 업데이트 (타일 중앙으로)
+		gameObject->info.set_worldx(newX * 48.0f + 24.0f);
+		gameObject->info.set_worldy(newY * 48.0f + 24.0f);
+		
+		// 브로드캐스트 빈도 조절 - 짧은 시간 내 연속 이동은 마지막만 전송
+		static map<uint64, uint64> lastMoveTime;
+		uint64 currentTime = GetTickCount64();
+		
+		if (lastMoveTime.find(id) == lastMoveTime.end() || 
+			currentTime - lastMoveTime[id] >= 50) // 50ms 간격으로 제한
+		{
+			SendBufferRef sendBuffer = ServerPacketHandler::Make_S_Move(gameObject->info);
+			Broadcast(sendBuffer);
+			lastMoveTime[id] = currentTime;
+		}
+		
+		cout << "Player " << id << " move APPROVED: moved to (" << newX << ", " << newY << ")" << endl;
 	}
 	else
 	{
-		// 이동 불가 - 방향만 변경
+		// 이동 불가 - 클라이언트 위치를 서버 위치로 보정
 		gameObject->info.set_dir(moveDir);
 		gameObject->info.set_state(IDLE);
 		
 		SendBufferRef sendBuffer = ServerPacketHandler::Make_S_Move(gameObject->info);
 		Broadcast(sendBuffer);
+		
+		cout << "Player " << id << " move REJECTED: position corrected to (" << currentX << ", " << currentY << ")" << endl;
 	}
 }
 

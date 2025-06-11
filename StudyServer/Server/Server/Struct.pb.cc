@@ -50,6 +50,8 @@ PROTOBUF_CONSTEXPR ObjectInfo::ObjectInfo(
   , /*decltype(_impl_.defence_)*/0
   , /*decltype(_impl_.posx_)*/0
   , /*decltype(_impl_.posy_)*/0
+  , /*decltype(_impl_.worldx_)*/0
+  , /*decltype(_impl_.worldy_)*/0
   , /*decltype(_impl_._cached_size_)*/{}} {}
 struct ObjectInfoDefaultTypeInternal {
   PROTOBUF_CONSTEXPR ObjectInfoDefaultTypeInternal()
@@ -92,6 +94,8 @@ const uint32_t TableStruct_Struct_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(p
   PROTOBUF_FIELD_OFFSET(::Protocol::ObjectInfo, _impl_.defence_),
   PROTOBUF_FIELD_OFFSET(::Protocol::ObjectInfo, _impl_.posx_),
   PROTOBUF_FIELD_OFFSET(::Protocol::ObjectInfo, _impl_.posy_),
+  PROTOBUF_FIELD_OFFSET(::Protocol::ObjectInfo, _impl_.worldx_),
+  PROTOBUF_FIELD_OFFSET(::Protocol::ObjectInfo, _impl_.worldy_),
 };
 static const ::_pbi::MigrationSchema schemas[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
   { 0, -1, -1, sizeof(::Protocol::BuffData)},
@@ -106,21 +110,21 @@ static const ::_pb::Message* const file_default_instances[] = {
 const char descriptor_table_protodef_Struct_2eproto[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) =
   "\n\014Struct.proto\022\010Protocol\032\nEnum.proto\"\?\n\010"
   "BuffData\022\016\n\006buffId\030\001 \001(\004\022\022\n\nremainTime\030\002"
-  " \001(\002\022\017\n\007victims\030\003 \003(\004\"\374\001\n\nObjectInfo\022\020\n\010"
+  " \001(\002\022\017\n\007victims\030\003 \003(\004\"\234\002\n\nObjectInfo\022\020\n\010"
   "objectId\030\001 \001(\004\022)\n\nobjectType\030\002 \001(\0162\025.Pro"
   "tocol.OBJECT_TYPE\022*\n\005state\030\003 \001(\0162\033.Proto"
   "col.OBJECT_STATE_TYPE\022\037\n\003dir\030\004 \001(\0162\022.Pro"
   "tocol.DIR_TYPE\022\014\n\004name\030\005 \001(\t\022\n\n\002hp\030\006 \001(\005"
   "\022\r\n\005maxHp\030\007 \001(\005\022\016\n\006attack\030\010 \001(\005\022\017\n\007defen"
-  "ce\030\t \001(\005\022\014\n\004posX\030\n \001(\005\022\014\n\004posY\030\013 \001(\005b\006pr"
-  "oto3"
+  "ce\030\t \001(\005\022\014\n\004posX\030\n \001(\005\022\014\n\004posY\030\013 \001(\005\022\016\n\006"
+  "worldX\030\014 \001(\002\022\016\n\006worldY\030\r \001(\002b\006proto3"
   ;
 static const ::_pbi::DescriptorTable* const descriptor_table_Struct_2eproto_deps[1] = {
   &::descriptor_table_Enum_2eproto,
 };
 static ::_pbi::once_flag descriptor_table_Struct_2eproto_once;
 const ::_pbi::DescriptorTable descriptor_table_Struct_2eproto = {
-    false, false, 364, descriptor_table_protodef_Struct_2eproto,
+    false, false, 396, descriptor_table_protodef_Struct_2eproto,
     "Struct.proto",
     &descriptor_table_Struct_2eproto_once, descriptor_table_Struct_2eproto_deps, 1, 2,
     schemas, file_default_instances, TableStruct_Struct_2eproto::offsets,
@@ -427,6 +431,8 @@ ObjectInfo::ObjectInfo(const ObjectInfo& from)
     , decltype(_impl_.defence_){}
     , decltype(_impl_.posx_){}
     , decltype(_impl_.posy_){}
+    , decltype(_impl_.worldx_){}
+    , decltype(_impl_.worldy_){}
     , /*decltype(_impl_._cached_size_)*/{}};
 
   _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
@@ -439,8 +445,8 @@ ObjectInfo::ObjectInfo(const ObjectInfo& from)
       _this->GetArenaForAllocation());
   }
   ::memcpy(&_impl_.objectid_, &from._impl_.objectid_,
-    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.posy_) -
-    reinterpret_cast<char*>(&_impl_.objectid_)) + sizeof(_impl_.posy_));
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.worldy_) -
+    reinterpret_cast<char*>(&_impl_.objectid_)) + sizeof(_impl_.worldy_));
   // @@protoc_insertion_point(copy_constructor:Protocol.ObjectInfo)
 }
 
@@ -460,6 +466,8 @@ inline void ObjectInfo::SharedCtor(
     , decltype(_impl_.defence_){0}
     , decltype(_impl_.posx_){0}
     , decltype(_impl_.posy_){0}
+    , decltype(_impl_.worldx_){0}
+    , decltype(_impl_.worldy_){0}
     , /*decltype(_impl_._cached_size_)*/{}
   };
   _impl_.name_.InitDefault();
@@ -494,8 +502,8 @@ void ObjectInfo::Clear() {
 
   _impl_.name_.ClearToEmpty();
   ::memset(&_impl_.objectid_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&_impl_.posy_) -
-      reinterpret_cast<char*>(&_impl_.objectid_)) + sizeof(_impl_.posy_));
+      reinterpret_cast<char*>(&_impl_.worldy_) -
+      reinterpret_cast<char*>(&_impl_.objectid_)) + sizeof(_impl_.worldy_));
   _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
@@ -595,6 +603,22 @@ const char* ObjectInfo::_InternalParse(const char* ptr, ::_pbi::ParseContext* ct
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 88)) {
           _impl_.posy_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // float worldX = 12;
+      case 12:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 101)) {
+          _impl_.worldx_ = ::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<float>(ptr);
+          ptr += sizeof(float);
+        } else
+          goto handle_unusual;
+        continue;
+      // float worldY = 13;
+      case 13:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 109)) {
+          _impl_.worldy_ = ::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<float>(ptr);
+          ptr += sizeof(float);
         } else
           goto handle_unusual;
         continue;
@@ -700,6 +724,26 @@ uint8_t* ObjectInfo::_InternalSerialize(
     target = ::_pbi::WireFormatLite::WriteInt32ToArray(11, this->_internal_posy(), target);
   }
 
+  // float worldX = 12;
+  static_assert(sizeof(uint32_t) == sizeof(float), "Code assumes uint32_t and float are the same size.");
+  float tmp_worldx = this->_internal_worldx();
+  uint32_t raw_worldx;
+  memcpy(&raw_worldx, &tmp_worldx, sizeof(tmp_worldx));
+  if (raw_worldx != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteFloatToArray(12, this->_internal_worldx(), target);
+  }
+
+  // float worldY = 13;
+  static_assert(sizeof(uint32_t) == sizeof(float), "Code assumes uint32_t and float are the same size.");
+  float tmp_worldy = this->_internal_worldy();
+  uint32_t raw_worldy;
+  memcpy(&raw_worldy, &tmp_worldy, sizeof(tmp_worldy));
+  if (raw_worldy != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteFloatToArray(13, this->_internal_worldy(), target);
+  }
+
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
         _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
@@ -776,6 +820,24 @@ size_t ObjectInfo::ByteSizeLong() const {
     total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_posy());
   }
 
+  // float worldX = 12;
+  static_assert(sizeof(uint32_t) == sizeof(float), "Code assumes uint32_t and float are the same size.");
+  float tmp_worldx = this->_internal_worldx();
+  uint32_t raw_worldx;
+  memcpy(&raw_worldx, &tmp_worldx, sizeof(tmp_worldx));
+  if (raw_worldx != 0) {
+    total_size += 1 + 4;
+  }
+
+  // float worldY = 13;
+  static_assert(sizeof(uint32_t) == sizeof(float), "Code assumes uint32_t and float are the same size.");
+  float tmp_worldy = this->_internal_worldy();
+  uint32_t raw_worldy;
+  memcpy(&raw_worldy, &tmp_worldy, sizeof(tmp_worldy));
+  if (raw_worldy != 0) {
+    total_size += 1 + 4;
+  }
+
   return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
 }
 
@@ -827,6 +889,20 @@ void ObjectInfo::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PRO
   if (from._internal_posy() != 0) {
     _this->_internal_set_posy(from._internal_posy());
   }
+  static_assert(sizeof(uint32_t) == sizeof(float), "Code assumes uint32_t and float are the same size.");
+  float tmp_worldx = from._internal_worldx();
+  uint32_t raw_worldx;
+  memcpy(&raw_worldx, &tmp_worldx, sizeof(tmp_worldx));
+  if (raw_worldx != 0) {
+    _this->_internal_set_worldx(from._internal_worldx());
+  }
+  static_assert(sizeof(uint32_t) == sizeof(float), "Code assumes uint32_t and float are the same size.");
+  float tmp_worldy = from._internal_worldy();
+  uint32_t raw_worldy;
+  memcpy(&raw_worldy, &tmp_worldy, sizeof(tmp_worldy));
+  if (raw_worldy != 0) {
+    _this->_internal_set_worldy(from._internal_worldy());
+  }
   _this->_internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
 }
 
@@ -851,8 +927,8 @@ void ObjectInfo::InternalSwap(ObjectInfo* other) {
       &other->_impl_.name_, rhs_arena
   );
   ::PROTOBUF_NAMESPACE_ID::internal::memswap<
-      PROTOBUF_FIELD_OFFSET(ObjectInfo, _impl_.posy_)
-      + sizeof(ObjectInfo::_impl_.posy_)
+      PROTOBUF_FIELD_OFFSET(ObjectInfo, _impl_.worldy_)
+      + sizeof(ObjectInfo::_impl_.worldy_)
       - PROTOBUF_FIELD_OFFSET(ObjectInfo, _impl_.objectid_)>(
           reinterpret_cast<char*>(&_impl_.objectid_),
           reinterpret_cast<char*>(&other->_impl_.objectid_));

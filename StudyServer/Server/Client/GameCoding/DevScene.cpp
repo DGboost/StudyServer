@@ -81,7 +81,9 @@ void DevScene::Update()
 
 	float deltaTime = GET_SINGLE(TimeManager)->GetDeltaTime();
 
-	TickMonsterSpawn();
+	// 서버 권위적 시스템 - 클라이언트에서는 몬스터를 직접 스폰하지 않음
+	// 서버에서 S_AddObject 패킷으로 몬스터 정보를 받아서 생성
+	// TickMonsterSpawn();
 }
 
 void DevScene::Render(HDC hdc)
@@ -237,27 +239,35 @@ void DevScene::LoadPlayer()
 
 void DevScene::LoadMonster()
 {
+	cout << "Loading Monster flipbooks..." << endl;
+	
 	// MOVE
 	{
 		Texture* texture = GET_SINGLE(ResourceManager)->GetTexture(L"Snake");
 		Flipbook* fb = GET_SINGLE(ResourceManager)->CreateFlipbook(L"FB_SnakeUp");
 		fb->SetInfo({ texture, L"FB_SnakeUp", {100, 100}, 0, 3, 3, 0.5f });
+		cout << "Created FB_SnakeUp: " << (fb ? "OK" : "FAILED") << endl;
 	}
 	{
 		Texture* texture = GET_SINGLE(ResourceManager)->GetTexture(L"Snake");
 		Flipbook* fb = GET_SINGLE(ResourceManager)->CreateFlipbook(L"FB_SnakeDown");
 		fb->SetInfo({ texture, L"FB_SnakeDown", {100, 100}, 0, 3, 0, 0.5f });
+		cout << "Created FB_SnakeDown: " << (fb ? "OK" : "FAILED") << endl;
 	}
 	{
 		Texture* texture = GET_SINGLE(ResourceManager)->GetTexture(L"Snake");
 		Flipbook* fb = GET_SINGLE(ResourceManager)->CreateFlipbook(L"FB_SnakeLeft");
 		fb->SetInfo({ texture, L"FB_SnakeLeft", {100, 100}, 0, 3, 2, 0.5f });
+		cout << "Created FB_SnakeLeft: " << (fb ? "OK" : "FAILED") << endl;
 	}
 	{
 		Texture* texture = GET_SINGLE(ResourceManager)->GetTexture(L"Snake");
 		Flipbook* fb = GET_SINGLE(ResourceManager)->CreateFlipbook(L"FB_SnakeRight");
 		fb->SetInfo({ texture, L"FB_SnakeRight", {100, 100}, 0, 3, 1, 0.5f });
+		cout << "Created FB_SnakeRight: " << (fb ? "OK" : "FAILED") << endl;
 	}
+	
+	cout << "Monster flipbooks loading completed." << endl;
 }
 
 void DevScene::LoadProjectiles()
@@ -329,13 +339,22 @@ void DevScene::Handle_S_AddObject(Protocol::S_AddObject& pkt)
 			player->SetDir(info.dir());
 			player->SetState(info.state());
 			player->info = info;
-		}
-		else if (info.objecttype() == Protocol::OBJECT_TYPE_MONSTER)
+		}		else if (info.objecttype() == Protocol::OBJECT_TYPE_MONSTER)
 		{
 			Monster* monster = SpawnObject<Monster>(Vec2Int{ info.posx(), info.posy() });
+			
+			// 서버에서 받은 정보로 설정
+			monster->info = info;
 			monster->SetDir(info.dir());
 			monster->SetState(info.state());
-			monster->info = info;
+			
+			// 위치 설정
+			monster->SetCellPos(Vec2Int{ info.posx(), info.posy() }, true);
+			
+			// 애니메이션 강제 업데이트
+			monster->UpdateAnimation();
+			
+			cout << "Monster spawned on client: ID=" << info.objectid() << " at (" << info.posx() << ", " << info.posy() << ") State=" << info.state() << " Dir=" << info.dir() << endl;
 		}
 	}
 }
@@ -578,8 +597,11 @@ Vec2Int DevScene::GetRandomEmptyCellPos()
 
 void DevScene::TickMonsterSpawn()
 {
+	// 서버 권위적 시스템 - 클라이언트에서는 몬스터를 직접 스폰하지 않음
+	// 서버에서만 몬스터를 생성하고 S_AddObject 패킷으로 클라이언트에 전달
 	return;
 
+	// 이하 코드는 사용하지 않음 (서버에서만 몬스터 스폰)
 	if (_monsterCount < DESIRED_COUNT)
 		SpawnObjectAtRandomPos<Monster>();
 }

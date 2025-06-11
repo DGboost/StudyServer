@@ -24,9 +24,8 @@ int main()
 		make_shared<IocpCore>(),
 		[](){ return make_shared<GameSession>(); }, // TODO : SessionManager 등
 		100);
-	assert(service->Start());
-	uint64 lastUpdate = GetTickCount64();
-	const uint64 UPDATE_INTERVAL = 16; // 16ms마다 업데이트 (약 60fps)
+	assert(service->Start());	uint64 lastUpdate = GetTickCount64();
+	const uint64 UPDATE_INTERVAL = 50; // 50ms마다 업데이트 (20fps)로 변경하여 안정성 확보
 
 	while (true)
 	{

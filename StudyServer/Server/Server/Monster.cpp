@@ -65,10 +65,10 @@ void Monster::UpdateIdle()
 				{
 					Vec2Int nextPos = path[1];					if (room->CanGo(nextPos))
 					{
-						SetDir(GetLookAtDir(nextPos), true);
-						SetCellPos(nextPos, true); // 브로드캐스트 활성화
-						_waitUntil = GetTickCount64() + 200; // 200ms로 더 빠르게
-						SetState(MOVE, true);
+						SetDir(GetLookAtDir(nextPos), false); // 브로드캐스트 비활성화
+						SetCellPos(nextPos, true); // 위치 변경과 함께 즉시 브로드캐스트
+						_waitUntil = GetTickCount64() + 500; // 500ms로 변경하여 클라이언트와 동기화
+						SetState(MOVE, false); // 중복 브로드캐스트 방지
 						
 						// 디버그 로그 - 주기적으로만 출력
 						static uint64 lastLogTime = 0;

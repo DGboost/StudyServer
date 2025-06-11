@@ -17,6 +17,12 @@ Monster::Monster()
 	_flipbookMove[DIR_LEFT] = GET_SINGLE(ResourceManager)->GetFlipbook(L"FB_SnakeLeft");
 	_flipbookMove[DIR_RIGHT] = GET_SINGLE(ResourceManager)->GetFlipbook(L"FB_SnakeRight");
 
+	// 레이어 설정
+	SetLayer(LAYER_OBJECT);
+	
+	// 초기 애니메이션 설정
+	SetFlipbook(_flipbookMove[DIR_DOWN]); // 기본 방향으로 설정
+	cout << "Monster created with flipbooks - Down: " << (_flipbookMove[DIR_DOWN] ? "OK" : "NULL") << " Layer: " << GetLayer() << endl;
 }
 
 Monster::~Monster()
@@ -28,63 +34,53 @@ void Monster::BeginPlay()
 {
 	Super::BeginPlay();
 
-	SetState(MOVE);
+	// 초기 상태 설정
 	SetState(IDLE);
+	SetDir(DIR_DOWN);
+	
+	// 애니메이션 업데이트 강제 호출
+	UpdateAnimation();
+	
+	cout << "Monster BeginPlay - State: " << info.state() << " Dir: " << info.dir() << " Flipbook: " << (_flipbook ? "OK" : "NULL") << endl;
 }
 
 void Monster::Tick()
 {
 	Super::Tick();
-
+	
+	// 몬스터가 Tick되고 있는지 확인
+	static uint64 lastLogTime = 0;
+	uint64 currentTime = GetTickCount64();
+	if (currentTime - lastLogTime >= 3000) // 3초마다만 로그
+	{
+		cout << "Monster Tick - ID: " << info.objectid() << " State: " << info.state() << " Pos: (" << _pos.x << ", " << _pos.y << ")" << endl;
+		lastLogTime = currentTime;
+	}
 }
 
 void Monster::Render(HDC hdc)
 {
 	Super::Render(hdc);
-
+	
+	// 몬스터가 렌더링되고 있는지 확인
+	static uint64 lastLogTime = 0;
+	uint64 currentTime = GetTickCount64();
+	if (currentTime - lastLogTime >= 3000) // 3초마다만 로그
+	{
+		Vec2 cameraPos = GET_SINGLE(SceneManager)->GetCameraPos();
+		cout << "Monster Render - ID: " << info.objectid() << " Flipbook: " << (_flipbook ? "OK" : "NULL") 
+			<< " Pos: (" << _pos.x << ", " << _pos.y << ")" 
+			<< " Camera: (" << cameraPos.x << ", " << cameraPos.y << ")"
+			<< " Layer: " << GetLayer() << endl;
+		lastLogTime = currentTime;
+	}
 }
 
 void Monster::TickIdle()
 {
-	DevScene* scene = dynamic_cast<DevScene*>(GET_SINGLE(SceneManager)->GetCurrentScene());
-	if (scene == nullptr)
-		return;
-
+	// 클라이언트에서는 몬스터 AI 로직을 실행하지 않음
+	// 서버에서 S_Move 패킷으로 몬스터의 위치와 상태를 전달받아 처리
 	return;
-
-	// Find Player
-	if (_target == nullptr)
-		_target = scene->FindClosestPlayer(GetCellPos());
-
-	if (_target)
-	{
-		Vec2Int dir = _target->GetCellPos() - GetCellPos();
-		int32 dist = abs(dir.x) + abs(dir.y);
-		if (dist == 1)
-		{
-			SetDir(GetLookAtDir(_target->GetCellPos()));
-			SetState(SKILL);
-			_waitSeconds = 0.5f; // ���� ���� �ð�
-		}
-		else
-		{
-			vector<Vec2Int> path;
-			if (scene->FindPath(GetCellPos(), _target->GetCellPos(), OUT path))
-			{
-				if (path.size() > 1)
-				{
-					Vec2Int nextPos = path[1];
-					if (scene->CanGo(nextPos))
-					{
-						SetCellPos(nextPos);
-						SetState(MOVE);
-					}
-				}
-				else
-					SetCellPos(path[0]);
-			}
-		}
-	}
 }
 
 void Monster::TickMove()
@@ -99,27 +95,13 @@ void Monster::TickMove()
 	}
 	else
 	{
-		bool horizontal = abs(dir.x) > abs(dir.y);
-		if (horizontal)
-			SetDir(dir.x < 0 ? DIR_LEFT : DIR_RIGHT);
-		else
-			SetDir(dir.y < 0 ? DIR_UP : DIR_DOWN);
-
-		switch (info.dir())
-		{
-		case DIR_UP:
-			_pos.y -= 50 * deltaTime;
-			break;
-		case DIR_DOWN:
-			_pos.y += 50 * deltaTime;
-			break;
-		case DIR_LEFT:
-			_pos.x -= 50 * deltaTime;
-			break;
-		case DIR_RIGHT:
-			_pos.x += 50 * deltaTime;
-			break;
-		}
+		// 서버 이동 간격(500ms)에 맞춰 속도 조정
+		// 48픽셀(한 타일) / 0.5초 = 96 pixels/second
+		Vec2 normalizedDir = dir;
+		normalizedDir.Normalize();
+		
+		_pos.x += normalizedDir.x * 96 * deltaTime; // 서버와 동기화된 속도
+		_pos.y += normalizedDir.y * 96 * deltaTime;
 	}
 }
 
@@ -135,23 +117,28 @@ void Monster::TickSkill()
 		return;
 	}
 
-	{
-		DevScene* scene = dynamic_cast<DevScene*>(GET_SINGLE(SceneManager)->GetCurrentScene());
-		if (scene == nullptr)
-			return;
-
-		Creature* creature = scene->GetCreatureAt(GetFrontCellPos());
-		if (creature)
-		{
-			scene->SpawnObject<HitEffect>(GetFrontCellPos());
-			creature->OnDamaged(this);
-		}
-
-		SetState(IDLE);
-	}
+	// 클라이언트에서는 스킬 이펙트만 표시하고, 실제 데미지 처리는 서버에서 담당
+	// 스킬 애니메이션이 끝나면 IDLE 상태로 전환
+	SetState(IDLE);
 }
 
 void Monster::UpdateAnimation()
 {
-	SetFlipbook(_flipbookMove[info.dir()]);
+	if (_flipbookMove[info.dir()] != nullptr)
+	{
+		SetFlipbook(_flipbookMove[info.dir()]);
+		
+		// 디버그 로그
+		static uint64 lastLogTime = 0;
+		uint64 currentTime = GetTickCount64();
+		if (currentTime - lastLogTime >= 2000) // 2초마다만 로그
+		{
+			cout << "Monster animation updated - Dir: " << info.dir() << " Flipbook: " << (_flipbook ? "OK" : "NULL") << endl;
+			lastLogTime = currentTime;
+		}
+	}
+	else
+	{
+		cout << "Warning: Monster flipbook is NULL for direction " << info.dir() << endl;
+	}
 }

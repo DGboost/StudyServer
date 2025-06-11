@@ -30,8 +30,8 @@ void MyPlayer::BeginPlay()
 void MyPlayer::Tick()
 {
 	Super::Tick();
-
-	SyncToServer();
+	
+	// 주기적 동기화 제거 - 이동은 TryMove()에서만 처리
 }
 
 void MyPlayer::Render(HDC hdc)
@@ -41,32 +41,29 @@ void MyPlayer::Render(HDC hdc)
 
 void MyPlayer::TickInput()
 {
-	// 키 다운 이벤트로 변경 - 한 번 누르면 한 번만 이동
+	// 키 다운 이벤트로 한 번 누르면 한 번만 이동
 	if (GET_SINGLE(InputManager)->GetButtonDown(KeyType::W))
 	{
-		cout << "W key pressed - moving UP" << endl;
 		SetDir(DIR_UP);
-		TryMove();
+		TryMove(DIR_UP);
 	}
 	else if (GET_SINGLE(InputManager)->GetButtonDown(KeyType::S))
 	{
-		cout << "S key pressed - moving DOWN" << endl;
 		SetDir(DIR_DOWN);
-		TryMove();
+		TryMove(DIR_DOWN);
 	}
 	else if (GET_SINGLE(InputManager)->GetButtonDown(KeyType::A))
 	{
-		cout << "A key pressed - moving LEFT" << endl;
 		SetDir(DIR_LEFT);
-		TryMove();
+		TryMove(DIR_LEFT);
 	}
 	else if (GET_SINGLE(InputManager)->GetButtonDown(KeyType::D))
 	{
-		cout << "D key pressed - moving RIGHT" << endl;
 		SetDir(DIR_RIGHT);
-		TryMove();
+		TryMove(DIR_RIGHT);
 	}
 
+	// 무기 변경 및 스킬 입력
 	if (GET_SINGLE(InputManager)->GetButtonDown(KeyType::KEY_1))
 	{
 		SetWeaponType(WeaponType::Sword);
@@ -86,13 +83,13 @@ void MyPlayer::TickInput()
 	}
 }
 
-void MyPlayer::TryMove()
+void MyPlayer::TryMove(Dir dir)
 {
 	Vec2Int currentPos = GetCellPos();
 	Vec2Int nextPos = currentPos;
 
 	// 방향에 따른 다음 위치 계산
-	switch (info.dir())
+	switch (dir)
 	{
 	case DIR_UP:
 		nextPos.y -= 1;
@@ -117,15 +114,15 @@ void MyPlayer::TryMove()
 		SetCellPos(nextPos);
 		SetState(MOVE);
 		
-		// 서버에 이동 패킷 전송
+		// 서버에 이동 패킷 전송 (즉시 전송)
 		SendBufferRef sendBuffer = ClientPacketHandler::Make_C_Move();
 		GET_SINGLE(NetworkManager)->SendPacket(sendBuffer);
 		
-		cout << "Move packet sent to server" << endl;
+		cout << "Move packet sent to server for position (" << nextPos.x << ", " << nextPos.y << ")" << endl;
 	}
 	else
 	{
-		// 이동 불가능한 경우 방향만 변경
+		// 이동 불가능한 경우 방향만 변경하고 IDLE 상태로
 		SetState(IDLE);
 		cout << "Cannot move to (" << nextPos.x << ", " << nextPos.y << ")" << endl;
 	}
@@ -138,6 +135,9 @@ void MyPlayer::TickIdle()
 
 void MyPlayer::TickMove()
 {
+	// 이동 중에도 입력 처리 가능하도록 변경
+	TickInput();
+	
 	// 이동 애니메이션이 끝나면 IDLE 상태로 변경
 	float deltaTime = GET_SINGLE(TimeManager)->GetDeltaTime();
 	Vec2 dir = (_destPos - _pos);
@@ -171,9 +171,4 @@ void MyPlayer::TickMove()
 void MyPlayer::TickSkill()
 {
 	Super::TickSkill();
-}
-
-void MyPlayer::SyncToServer()
-{
-	// 이제 TryMove()에서 직접 패킷을 전송하므로 여기서는 별도 처리 불필요
 }

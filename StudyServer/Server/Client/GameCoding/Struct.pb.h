@@ -377,6 +377,8 @@ class ObjectInfo final :
     kDefenceFieldNumber = 9,
     kPosXFieldNumber = 10,
     kPosYFieldNumber = 11,
+    kWorldXFieldNumber = 12,
+    kWorldYFieldNumber = 13,
   };
   // string name = 5;
   void clear_name();
@@ -482,6 +484,24 @@ class ObjectInfo final :
   void _internal_set_posy(int32_t value);
   public:
 
+  // float worldX = 12;
+  void clear_worldx();
+  float worldx() const;
+  void set_worldx(float value);
+  private:
+  float _internal_worldx() const;
+  void _internal_set_worldx(float value);
+  public:
+
+  // float worldY = 13;
+  void clear_worldy();
+  float worldy() const;
+  void set_worldy(float value);
+  private:
+  float _internal_worldy() const;
+  void _internal_set_worldy(float value);
+  public:
+
   // @@protoc_insertion_point(class_scope:Protocol.ObjectInfo)
  private:
   class _Internal;
@@ -501,6 +521,8 @@ class ObjectInfo final :
     int32_t defence_;
     int32_t posx_;
     int32_t posy_;
+    float worldx_;
+    float worldy_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
   union { Impl_ _impl_; };
@@ -856,6 +878,46 @@ inline void ObjectInfo::_internal_set_posy(int32_t value) {
 inline void ObjectInfo::set_posy(int32_t value) {
   _internal_set_posy(value);
   // @@protoc_insertion_point(field_set:Protocol.ObjectInfo.posY)
+}
+
+// float worldX = 12;
+inline void ObjectInfo::clear_worldx() {
+  _impl_.worldx_ = 0;
+}
+inline float ObjectInfo::_internal_worldx() const {
+  return _impl_.worldx_;
+}
+inline float ObjectInfo::worldx() const {
+  // @@protoc_insertion_point(field_get:Protocol.ObjectInfo.worldX)
+  return _internal_worldx();
+}
+inline void ObjectInfo::_internal_set_worldx(float value) {
+  
+  _impl_.worldx_ = value;
+}
+inline void ObjectInfo::set_worldx(float value) {
+  _internal_set_worldx(value);
+  // @@protoc_insertion_point(field_set:Protocol.ObjectInfo.worldX)
+}
+
+// float worldY = 13;
+inline void ObjectInfo::clear_worldy() {
+  _impl_.worldy_ = 0;
+}
+inline float ObjectInfo::_internal_worldy() const {
+  return _impl_.worldy_;
+}
+inline float ObjectInfo::worldy() const {
+  // @@protoc_insertion_point(field_get:Protocol.ObjectInfo.worldY)
+  return _internal_worldy();
+}
+inline void ObjectInfo::_internal_set_worldy(float value) {
+  
+  _impl_.worldy_ = value;
+}
+inline void ObjectInfo::set_worldy(float value) {
+  _internal_set_worldy(value);
+  // @@protoc_insertion_point(field_set:Protocol.ObjectInfo.worldY)
 }
 
 #ifdef __GNUC__

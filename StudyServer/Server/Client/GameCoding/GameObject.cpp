@@ -109,7 +109,30 @@ void GameObject::SetCellPos(Vec2Int cellPos, bool teleport /*= false*/)
 	_destPos = scene->ConvertPos(cellPos);
 
 	if (teleport)
+	{
 		_pos = _destPos;
+		
+		// 몬스터의 경우 위치 동기화 디버그 로그
+		if (info.objecttype() == Protocol::OBJECT_TYPE_MONSTER)
+		{
+			static uint64 lastLogTime = 0;
+			uint64 currentTime = GetTickCount64();
+			if (currentTime - lastLogTime >= 1000) // 1초마다만 로그
+			{
+				cout << "Monster " << info.objectid() << " teleported to cell(" << cellPos.x << ", " << cellPos.y << ") pixel(" << _pos.x << ", " << _pos.y << ")" << endl;
+				lastLogTime = currentTime;
+			}
+		}
+	}
+	else
+	{
+		// teleport=false여도 몬스터가 IDLE 상태이면 즉시 위치 업데이트
+		if (info.objecttype() == Protocol::OBJECT_TYPE_MONSTER && info.state() == IDLE)
+		{
+			_pos = _destPos;
+			cout << "Monster " << info.objectid() << " IDLE position updated to cell(" << cellPos.x << ", " << cellPos.y << ") pixel(" << _pos.x << ", " << _pos.y << ")" << endl;
+		}
+	}
 
 	_dirtyFlag = true;
 }

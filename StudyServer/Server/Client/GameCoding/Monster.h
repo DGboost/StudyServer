@@ -24,6 +24,7 @@ private:
 	virtual void TickMove() override;
 	virtual void TickSkill() override;
 
+public:
 	virtual void UpdateAnimation() override;
 
 private:

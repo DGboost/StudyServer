@@ -1045,6 +1045,8 @@ class C_Move final :
 
   enum : int {
     kInfoFieldNumber = 1,
+    kPredictedXFieldNumber = 2,
+    kPredictedYFieldNumber = 3,
   };
   // .Protocol.ObjectInfo info = 1;
   bool has_info() const;
@@ -1064,6 +1066,24 @@ class C_Move final :
       ::Protocol::ObjectInfo* info);
   ::Protocol::ObjectInfo* unsafe_arena_release_info();
 
+  // float predictedX = 2;
+  void clear_predictedx();
+  float predictedx() const;
+  void set_predictedx(float value);
+  private:
+  float _internal_predictedx() const;
+  void _internal_set_predictedx(float value);
+  public:
+
+  // float predictedY = 3;
+  void clear_predictedy();
+  float predictedy() const;
+  void set_predictedy(float value);
+  private:
+  float _internal_predictedy() const;
+  void _internal_set_predictedy(float value);
+  public:
+
   // @@protoc_insertion_point(class_scope:Protocol.C_Move)
  private:
   class _Internal;
@@ -1073,6 +1093,8 @@ class C_Move final :
   typedef void DestructorSkippable_;
   struct Impl_ {
     ::Protocol::ObjectInfo* info_;
+    float predictedx_;
+    float predictedy_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
   union { Impl_ _impl_; };
@@ -2318,6 +2340,46 @@ inline void C_Move::set_allocated_info(::Protocol::ObjectInfo* info) {
   }
   _impl_.info_ = info;
   // @@protoc_insertion_point(field_set_allocated:Protocol.C_Move.info)
+}
+
+// float predictedX = 2;
+inline void C_Move::clear_predictedx() {
+  _impl_.predictedx_ = 0;
+}
+inline float C_Move::_internal_predictedx() const {
+  return _impl_.predictedx_;
+}
+inline float C_Move::predictedx() const {
+  // @@protoc_insertion_point(field_get:Protocol.C_Move.predictedX)
+  return _internal_predictedx();
+}
+inline void C_Move::_internal_set_predictedx(float value) {
+  
+  _impl_.predictedx_ = value;
+}
+inline void C_Move::set_predictedx(float value) {
+  _internal_set_predictedx(value);
+  // @@protoc_insertion_point(field_set:Protocol.C_Move.predictedX)
+}
+
+// float predictedY = 3;
+inline void C_Move::clear_predictedy() {
+  _impl_.predictedy_ = 0;
+}
+inline float C_Move::_internal_predictedy() const {
+  return _impl_.predictedy_;
+}
+inline float C_Move::predictedy() const {
+  // @@protoc_insertion_point(field_get:Protocol.C_Move.predictedY)
+  return _internal_predictedy();
+}
+inline void C_Move::_internal_set_predictedy(float value) {
+  
+  _impl_.predictedy_ = value;
+}
+inline void C_Move::set_predictedy(float value) {
+  _internal_set_predictedy(value);
+  // @@protoc_insertion_point(field_set:Protocol.C_Move.predictedY)
 }
 
 // -------------------------------------------------------------------

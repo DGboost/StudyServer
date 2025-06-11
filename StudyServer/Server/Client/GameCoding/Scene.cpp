@@ -2,6 +2,7 @@
 #include "Scene.h"
 #include "Actor.h"
 #include "Creature.h"
+#include "Monster.h"
 #include "UI.h"
 #include "TimeManager.h"
 #include "SceneManager.h"
@@ -39,13 +40,22 @@ void Scene::Update()
 {
 	float deltaTime = GET_SINGLE(TimeManager)->GetDeltaTime();
 
-	// ����
+	// ����
 	for (const vector<Actor*> actors : _actors)
 		for (Actor* actor : actors)
 			actor->Tick();
 
 	for (UI* ui : _uis)
 		ui->Tick();
+		
+	// 주기적으로 액터 수 로그
+	static uint64 lastLogTime = 0;
+	uint64 currentTime = GetTickCount64();
+	if (currentTime - lastLogTime >= 5000) // 5초마다만 로그
+	{
+		cout << "Scene Update - Total actors in LAYER_OBJECT: " << _actors[LAYER_OBJECT].size() << endl;
+		lastLogTime = currentTime;
+	}
 }
 
 void Scene::Render(HDC hdc)
@@ -70,6 +80,13 @@ void Scene::AddActor(Actor* actor)
 		return;
 
 	_actors[actor->GetLayer()].push_back(actor);
+	
+	// 디버그 로그 추가
+	Monster* monster = dynamic_cast<Monster*>(actor);
+	if (monster)
+	{
+		cout << "Scene::AddActor - Monster added to layer " << actor->GetLayer() << " Total actors in LAYER_OBJECT: " << _actors[LAYER_OBJECT].size() << endl;
+	}
 }
 
 void Scene::RemoveActor(Actor* actor)
