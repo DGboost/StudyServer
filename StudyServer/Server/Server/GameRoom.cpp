@@ -33,6 +33,8 @@ void GameRoom::Init()
 
 void GameRoom::Update()
 {
+	// 서버 권위 구조: 모든 게임 로직을 서버에서 처리
+	
 	// 플레이어 업데이트
 	for (auto& item : _players)
 	{
@@ -45,8 +47,14 @@ void GameRoom::Update()
 		item.second->Update();
 	}
 	
-	// 추가적인 게임 로직 처리
-	// 예: 아이템 스폰, 이벤트 처리 등
+	// 주기적으로 모든 오브젝트 상태를 클라이언트에 브로드캐스트 (30Hz)
+	static uint64 lastBroadcastTime = 0;
+	uint64 currentTime = GetTickCount64();
+	if (currentTime - lastBroadcastTime >= 33) // 약 30FPS (33ms) - 네트워크 부하 고려
+	{
+		BroadcastGameState();
+		lastBroadcastTime = currentTime;
+	}
 }
 
 void GameRoom::EnterRoom(GameSessionRef session)
@@ -129,33 +137,26 @@ void GameRoom::Handle_C_Move(Protocol::C_Move& pkt)
 		return;
 	}
 
-	// 클라이언트에서 받은 상태 확인
-	ObjectState clientState = pkt.info().state();
+	// 서버 권위 구조: 클라이언트의 입력을 받아 서버에서 이동 로직 수행
 	Dir moveDir = pkt.info().dir();
+	ObjectState clientState = pkt.info().state();
 	
-	// 클라이언트가 예측한 위치
-	float predictedX = pkt.predictedx();
-	float predictedY = pkt.predictedy();
+	cout << "Received move request from player " << id << " - Dir: " << moveDir << " State: " << clientState << endl;
 	
-	cout << "Received move request from player " << id << " - State: " << clientState << " Dir: " << moveDir << endl;
-	
+	// 정지 요청 처리 (IDLE 상태)
 	if (clientState == IDLE)
 	{
-		// 클라이언트가 정지 상태 - 즉시 반영
-		gameObject->info.set_state(IDLE);
-		gameObject->info.set_dir(moveDir);
-		
-		SendBufferRef sendBuffer = ServerPacketHandler::Make_S_Move(gameObject->info);
-		Broadcast(sendBuffer);
-		cout << "Player " << id << " state updated to IDLE" << endl;
+		// 정지 요청 - 현재 방향 유지하고 IDLE 상태로
+		gameObject->SetState(IDLE, false);
+		cout << "Player " << id << " stop request processed" << endl;
 		return;
 	}
 	
-	// 이동 요청 처리
+	// 현재 서버상 위치
 	int32 currentX = gameObject->info.posx();
 	int32 currentY = gameObject->info.posy();
 	
-	// 방향에 따른 이동 계산
+	// 이동 요청 처리 - 서버에서 다음 위치 계산
 	int32 newX = currentX;
 	int32 newY = currentY;
 	
@@ -175,46 +176,29 @@ void GameRoom::Handle_C_Move(Protocol::C_Move& pkt)
 		break;
 	}
 	
-	cout << "Player " << id << " move request: (" << currentX << ", " << currentY << ") -> (" << newX << ", " << newY << ")" << endl;
+	cout << "Server calculating move: (" << currentX << ", " << currentY << ") -> (" << newX << ", " << newY << ")" << endl;
 	
-	// 맵 경계 및 충돌 검사 - 더 관대하게
+	// 서버에서 이동 가능 여부 검증
 	if (CanGo(newX, newY))
 	{
-		// 이동 허용 - 오브젝트 정보 업데이트
-		gameObject->info.set_state(MOVE);
-		gameObject->info.set_dir(moveDir);
-		gameObject->info.set_posx(newX);
-		gameObject->info.set_posy(newY);
+		// 이동 허용 - 서버에서 오브젝트 상태 업데이트
+		gameObject->SetState(MOVE, false);
+		gameObject->SetDir(moveDir, false);
+		gameObject->SetCellPos(Vec2Int{newX, newY}, false);
 		
-		// 픽셀 단위 위치도 업데이트 (타일 중앙으로)
-		gameObject->info.set_worldx(newX * 48.0f + 24.0f);
-		gameObject->info.set_worldy(newY * 48.0f + 24.0f);
-		
-		// 브로드캐스트 빈도 조절 - 짧은 시간 내 연속 이동은 마지막만 전송
-		static map<uint64, uint64> lastMoveTime;
-		uint64 currentTime = GetTickCount64();
-		
-		if (lastMoveTime.find(id) == lastMoveTime.end() || 
-			currentTime - lastMoveTime[id] >= 50) // 50ms 간격으로 제한
-		{
-			SendBufferRef sendBuffer = ServerPacketHandler::Make_S_Move(gameObject->info);
-			Broadcast(sendBuffer);
-			lastMoveTime[id] = currentTime;
-		}
-		
-		cout << "Player " << id << " move APPROVED: moved to (" << newX << ", " << newY << ")" << endl;
+		cout << "Server APPROVED move for player " << id << ": (" << newX << ", " << newY << ")" << endl;
 	}
 	else
 	{
-		// 이동 불가 - 클라이언트 위치를 서버 위치로 보정
-		gameObject->info.set_dir(moveDir);
-		gameObject->info.set_state(IDLE);
+		// 이동 불가 - 방향만 변경하고 현재 위치 유지
+		gameObject->SetDir(moveDir, false);
+		gameObject->SetState(IDLE, false);
 		
-		SendBufferRef sendBuffer = ServerPacketHandler::Make_S_Move(gameObject->info);
-		Broadcast(sendBuffer);
-		
-		cout << "Player " << id << " move REJECTED: position corrected to (" << currentX << ", " << currentY << ")" << endl;
+		cout << "Server REJECTED move for player " << id << ": position corrected to (" << currentX << ", " << currentY << ")" << endl;
 	}
+	
+	// _dirtyFlag는 이미 Set 메서드들에서 설정됨
+	// BroadcastGameState()에서 주기적으로 전송됨
 }
 
 void GameRoom::AddObject(GameObjectRef gameObject)
@@ -427,39 +411,32 @@ bool GameRoom::FindPath(Vec2Int src, Vec2Int dest, vector<Vec2Int>& path, int32 
 	return true;
 }
 
-bool GameRoom::CanGo(Vec2Int cellPos)
+void GameRoom::BroadcastGameState()
 {
-	Tile* tile = _tilemap.GetTileAt(cellPos);
-	if (tile == nullptr)
-		return false;
-
-	// 다른 플레이어나 몬스터가 있는지 확인
-	if (GetGameObjectAt(cellPos) != nullptr)
-		return false;
-
-	return tile->value != 1;
-}
-
-bool GameRoom::CanGo(int32 x, int32 y)
-{
-	return CanGo(Vec2Int{x, y});
-}
-
-Vec2Int GameRoom::GetRandomEmptyCellPos()
-{
-	Vec2Int ret = { -1, -1 };
-
-	Vec2Int size = _tilemap.GetMapSize();
-
-	// �� �� �õ�?
-	while (true)
+	// 서버 권위 구조: 모든 오브젝트의 상태를 주기적으로 브로드캐스트
+	
+	// 플레이어 상태 브로드캐스트
+	for (auto& pair : _players)
 	{
-		int32 x = rand() % size.x;
-		int32 y = rand() % size.y;
-		Vec2Int cellPos{ x, y };
-
-		if (CanGo(cellPos))
-			return cellPos;
+		PlayerRef player = pair.second;
+		if (player->_dirtyFlag) // 상태가 변경된 경우만
+		{
+			SendBufferRef sendBuffer = ServerPacketHandler::Make_S_Move(player->info);
+			Broadcast(sendBuffer);
+			player->_dirtyFlag = false;
+		}
+	}
+	
+	// 몬스터 상태 브로드캐스트
+	for (auto& pair : _monsters)
+	{
+		MonsterRef monster = pair.second;
+		if (monster->_dirtyFlag) // 상태가 변경된 경우만
+		{
+			SendBufferRef sendBuffer = ServerPacketHandler::Make_S_Move(monster->info);
+			Broadcast(sendBuffer);
+			monster->_dirtyFlag = false;
+		}
 	}
 }
 
@@ -478,4 +455,22 @@ GameObjectRef GameRoom::GetGameObjectAt(Vec2Int cellPos)
 	}
 
 	return nullptr;
+}
+
+bool GameRoom::CanGo(Vec2Int cellPos)
+{
+	Tile* tile = _tilemap.GetTileAt(cellPos);
+	if (tile == nullptr)
+		return false;
+
+	// 다른 플레이어나 몬스터가 있는지 확인
+	if (GetGameObjectAt(cellPos) != nullptr)
+		return false;
+
+	return tile->value != 1;
+}
+
+bool GameRoom::CanGo(int32 x, int32 y)
+{
+	return CanGo(Vec2Int{x, y});
 }

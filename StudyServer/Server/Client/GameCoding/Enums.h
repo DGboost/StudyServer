@@ -39,6 +39,7 @@ using Dir = Protocol::DIR_TYPE;
 #define DIR_UP		Protocol::DIR_TYPE_UP
 #define DIR_LEFT	Protocol::DIR_TYPE_LEFT
 #define DIR_RIGHT	Protocol::DIR_TYPE_RIGHT
+#define DIR_NONE	Protocol::DIR_TYPE_UP  // Default direction for "no movement"
 
 #define IDLE	Protocol::OBJECT_STATE_TYPE_IDLE
 #define MOVE	Protocol::OBJECT_STATE_TYPE_MOVE

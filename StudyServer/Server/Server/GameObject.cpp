@@ -35,6 +35,7 @@ void GameObject::SetState(ObjectState state, bool broadcast)
 		return;
 
 	info.set_state(state);
+	_dirtyFlag = true; // 상태 변경 플래그 설정
 
 	if (broadcast)
 	{
@@ -55,7 +56,11 @@ void GameObject::SetState(ObjectState state, bool broadcast)
 
 void GameObject::SetDir(Dir dir, bool broadcast)
 {
+	if (info.dir() == dir)
+		return;
+		
 	info.set_dir(dir);
+	_dirtyFlag = true; // 상태 변경 플래그 설정
 
 	if (broadcast)
 		BroadcastMove();
@@ -84,12 +89,18 @@ Dir GameObject::GetLookAtDir(Vec2Int cellPos)
 
 void GameObject::SetCellPos(Vec2Int cellPos, bool broadcast)
 {
-	info.set_posx(cellPos.x);
-	info.set_posy(cellPos.y);
-	
-	// 픽셀 단위 위치도 업데이트 (타일 중앙으로)
-	info.set_worldx(cellPos.x * 48.0f + 24.0f);
-	info.set_worldy(cellPos.y * 48.0f + 24.0f);
+	// 위치 변경 확인
+	if (info.posx() != cellPos.x || info.posy() != cellPos.y)
+	{
+		info.set_posx(cellPos.x);
+		info.set_posy(cellPos.y);
+		
+		// 픽셀 단위 위치도 업데이트 (타일 중앙으로)
+		info.set_worldx(cellPos.x * 48.0f + 24.0f);
+		info.set_worldy(cellPos.y * 48.0f + 24.0f);
+		
+		_dirtyFlag = true; // 위치 변경 플래그 설정
+	}
 
 	if (broadcast)
 		BroadcastMove();

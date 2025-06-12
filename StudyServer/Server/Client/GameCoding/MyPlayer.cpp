@@ -41,29 +41,35 @@ void MyPlayer::Render(HDC hdc)
 
 void MyPlayer::TickInput()
 {
-	// 키 다운 이벤트로 한 번 누르면 한 번만 이동
+	// 서버 권위 구조: 입력을 서버로 전송만
+	// GetButtonDown: 키를 누르는 순간에만 true
 	if (GET_SINGLE(InputManager)->GetButtonDown(KeyType::W))
 	{
-		SetDir(DIR_UP);
 		TryMove(DIR_UP);
 	}
 	else if (GET_SINGLE(InputManager)->GetButtonDown(KeyType::S))
 	{
-		SetDir(DIR_DOWN);
 		TryMove(DIR_DOWN);
 	}
 	else if (GET_SINGLE(InputManager)->GetButtonDown(KeyType::A))
 	{
-		SetDir(DIR_LEFT);
 		TryMove(DIR_LEFT);
 	}
 	else if (GET_SINGLE(InputManager)->GetButtonDown(KeyType::D))
 	{
-		SetDir(DIR_RIGHT);
 		TryMove(DIR_RIGHT);
 	}
+	
+	// 키를 떼면 정지 요청 전송
+	if (GET_SINGLE(InputManager)->GetButtonUp(KeyType::W) ||
+		GET_SINGLE(InputManager)->GetButtonUp(KeyType::S) ||
+		GET_SINGLE(InputManager)->GetButtonUp(KeyType::A) ||
+		GET_SINGLE(InputManager)->GetButtonUp(KeyType::D))
+	{
+		TryStop();
+	}
 
-	// 무기 변경 및 스킬 입력
+	// 무기 변경 - 로컬에서만 처리 (시각적 변경)
 	if (GET_SINGLE(InputManager)->GetButtonDown(KeyType::KEY_1))
 	{
 		SetWeaponType(WeaponType::Sword);
@@ -77,94 +83,72 @@ void MyPlayer::TickInput()
 		SetWeaponType(WeaponType::Staff);
 	}
 
-	if (GET_SINGLE(InputManager)->GetButton(KeyType::SpaceBar))
+	// 스킬 사용 - 나중에 서버로 전송하도록 수정 예정
+	if (GET_SINGLE(InputManager)->GetButtonDown(KeyType::SpaceBar))
 	{
-		SetState(SKILL);
+		// TODO: 서버에 스킬 사용 패킷 전송
+		cout << "Skill input received - TODO: send to server" << endl;
 	}
 }
 
 void MyPlayer::TryMove(Dir dir)
 {
-	Vec2Int currentPos = GetCellPos();
-	Vec2Int nextPos = currentPos;
+	// 서버 권위 구조: 클라이언트는 입력만 서버로 전송
+	// 로컬 상태 변경 제거
+	
+	cout << "Input received: attempting to move in direction " << dir << endl;
+	
+	// 시각적 피드백을 위한 방향 변경도 제거 - 서버 응답만 신뢰
+	
+	// 서버에 이동 요청 패킷 전송 (방향 정보만)
+	SendBufferRef sendBuffer = ClientPacketHandler::Make_C_Move(dir);
+	GET_SINGLE(NetworkManager)->SendPacket(sendBuffer);
+	
+	cout << "Move request sent to server for direction " << dir << endl;
+	
+	// 실제 이동은 서버 응답(S_Move)을 받았을 때만 수행
+}
 
-	// 방향에 따른 다음 위치 계산
-	switch (dir)
-	{
-	case DIR_UP:
-		nextPos.y -= 1;
-		break;
-	case DIR_DOWN:
-		nextPos.y += 1;
-		break;
-	case DIR_LEFT:
-		nextPos.x -= 1;
-		break;
-	case DIR_RIGHT:
-		nextPos.x += 1;
-		break;
-	}
-
-	cout << "TryMove: from (" << currentPos.x << ", " << currentPos.y << ") to (" << nextPos.x << ", " << nextPos.y << ")" << endl;
-
-	// 이동 가능한지 확인
-	if (CanGo(nextPos))
-	{
-		// 클라이언트에서 즉시 위치 업데이트 (예측 이동)
-		SetCellPos(nextPos);
-		SetState(MOVE);
-		
-		// 서버에 이동 패킷 전송 (즉시 전송)
-		SendBufferRef sendBuffer = ClientPacketHandler::Make_C_Move();
-		GET_SINGLE(NetworkManager)->SendPacket(sendBuffer);
-		
-		cout << "Move packet sent to server for position (" << nextPos.x << ", " << nextPos.y << ")" << endl;
-	}
-	else
-	{
-		// 이동 불가능한 경우 방향만 변경하고 IDLE 상태로
-		SetState(IDLE);
-		cout << "Cannot move to (" << nextPos.x << ", " << nextPos.y << ")" << endl;
-	}
+void MyPlayer::TryStop()
+{
+	// 서버에 정지 요청 전송
+	cout << "Stop input received" << endl;
+	
+	// 서버에 정지 패킷 전송 (현재 방향과 IDLE 상태)
+	Dir currentDir = static_cast<Dir>(info.dir());
+	SendBufferRef sendBuffer = ClientPacketHandler::Make_C_Move(currentDir, true); // isStop = true
+	GET_SINGLE(NetworkManager)->SendPacket(sendBuffer);
+	
+	cout << "Stop request sent to server" << endl;
 }
 
 void MyPlayer::TickIdle()
 {
+	// 서버 권위 구조: 입력만 처리, 상태 변경은 서버 응답에 의존
 	TickInput();
 }
 
 void MyPlayer::TickMove()
 {
-	// 이동 중에도 입력 처리 가능하도록 변경
+	// 서버 권위 구조: 클라이언트에서 자동 이동 로직 제거
+	// 이동 애니메이션은 서버에서 받은 상태 변경에 의해서만 수행
 	TickInput();
 	
-	// 이동 애니메이션이 끝나면 IDLE 상태로 변경
+	// 부드러운 이동 애니메이션 (서버 위치로 보간)
 	float deltaTime = GET_SINGLE(TimeManager)->GetDeltaTime();
 	Vec2 dir = (_destPos - _pos);
 	
-	if (dir.Length() < 5.f)  // 허용 오차를 늘림
+	if (dir.Length() < 5.f)
 	{
-		SetState(IDLE);
 		_pos = _destPos;
+		// 상태 변경은 서버에서만 - 로컬에서 IDLE로 변경하지 않음
 	}
 	else
 	{
-		// 부드러운 이동 애니메이션 - 속도를 줄임
-		switch (info.dir())
-		{
-		case DIR_UP:
-			_pos.y -= 300 * deltaTime; // 300으로 조정
-			break;
-		case DIR_DOWN:
-			_pos.y += 300 * deltaTime;
-			break;
-		case DIR_LEFT:
-			_pos.x -= 300 * deltaTime;
-			break;
-		case DIR_RIGHT:
-			_pos.x += 300 * deltaTime;
-			break;
-		}
+		// 목적지로 부드럽게 이동
+		Vec2 moveDir = dir;
+		moveDir.Normalize();
+		_pos += moveDir * 300 * deltaTime;
 	}
 }
 

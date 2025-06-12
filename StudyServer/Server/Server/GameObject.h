@@ -33,6 +33,7 @@ public:
 public:
 	Protocol::ObjectInfo info;
 	GameRoomRef room;
+	bool _dirtyFlag = false; // 상태 변경 플래그
 
 private:
 	static atomic<uint64> s_idGenerator;

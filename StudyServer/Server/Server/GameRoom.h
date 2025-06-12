@@ -34,6 +34,7 @@ public:
 	void AddObject(GameObjectRef gameObject);
 	void RemoveObject(uint64 id);
 	void Broadcast(SendBufferRef& sendBuffer);
+	void BroadcastGameState(); // 추가: 주기적 상태 브로드캐스트
 
 public:
 	PlayerRef FindClosestPlayer(Vec2Int pos);
