@@ -16,6 +16,7 @@ private:
 	void TickInput();
 	void TryMove(Dir dir);
 	void TryStop(); // 정지 요청 메서드 추가
+	void TryAttack(); // 공격 요청 메서드 추가
 
 	virtual void TickIdle() override;
 	virtual void TickMove() override;

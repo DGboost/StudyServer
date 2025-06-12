@@ -82,12 +82,10 @@ void MyPlayer::TickInput()
 	{
 		SetWeaponType(WeaponType::Staff);
 	}
-
-	// 스킬 사용 - 나중에 서버로 전송하도록 수정 예정
+	// 공격/스킬 사용 - 서버에 공격 패킷 전송
 	if (GET_SINGLE(InputManager)->GetButtonDown(KeyType::A))
 	{
-		// TODO: 서버에 스킬 사용 패킷 전송
-		cout << "Skill input received - TODO: send to server" << endl;
+		TryAttack();
 	}
 }
 
@@ -120,6 +118,58 @@ void MyPlayer::TryStop()
 	GET_SINGLE(NetworkManager)->SendPacket(sendBuffer);
 	
 	cout << "Stop request sent to server" << endl;
+}
+
+void MyPlayer::TryAttack()
+{
+	// 서버 권위 구조: 클라이언트는 공격 입력만 서버로 전송
+	cout << "Attack input received" << endl;
+	
+	// 현재 바라보는 방향의 앞 셀에 있는 오브젝트를 공격 대상으로 설정
+	Vec2Int frontPos = GetFrontCellPos();
+	
+	// 장면에서 해당 위치의 오브젝트 찾기
+	DevScene* scene = GET_SINGLE(SceneManager)->GetDevScene();
+	if (scene)
+	{
+		GameObject* target = nullptr;
+		// 해당 위치에 있는 오브젝트 찾기 (몬스터 우선)
+		for (Actor* actor : scene->_actors[LAYER_OBJECT])
+		{
+			GameObject* gameObject = dynamic_cast<GameObject*>(actor);
+			if (gameObject && gameObject != this)
+			{
+				Vec2Int objPos = gameObject->GetCellPos();
+				if (objPos.x == frontPos.x && objPos.y == frontPos.y)
+				{
+					// 몬스터를 우선 타겟으로 설정
+					if (gameObject->info.objecttype() == Protocol::OBJECT_TYPE_MONSTER)
+					{
+						target = gameObject;
+						break;
+					}
+					else if (target == nullptr)
+					{
+						target = gameObject;
+					}
+				}
+			}
+		}
+		
+		// 타겟이 있든 없든 항상 공격 패킷을 전송 (공격 모션을 위해)
+		uint64 targetId = target ? target->info.objectid() : 0; // 타겟이 없으면 0
+		SendBufferRef sendBuffer = ClientPacketHandler::Make_C_Attack(targetId);
+		GET_SINGLE(NetworkManager)->SendPacket(sendBuffer);
+		
+		if (target)
+		{
+			cout << "Attack request sent to server for target " << target->info.objectid() << endl;
+		}
+		else
+		{
+			cout << "Attack request sent to server with no target (air attack)" << endl;
+		}
+	}
 }
 
 void MyPlayer::TickIdle()

@@ -16,6 +16,12 @@ PlayerRef GameObject::CreatePlayer()
 	PlayerRef player = make_shared<Player>();
 	player->info.set_objectid(s_idGenerator++);
 	player->info.set_objecttype(Protocol::OBJECT_TYPE_PLAYER);
+	
+	// 플레이어 기본 스탯 설정
+	player->info.set_hp(100);
+	player->info.set_maxhp(100);
+	player->info.set_attack(15);
+	player->info.set_defence(3);
 
 	return player;
 }
@@ -25,6 +31,12 @@ MonsterRef GameObject::CreateMonster()
 	MonsterRef monster = make_shared<Monster>();
 	monster->info.set_objectid(s_idGenerator++);
 	monster->info.set_objecttype(Protocol::OBJECT_TYPE_MONSTER);
+	
+	// 몬스터 기본 스탯 설정
+	monster->info.set_hp(100);
+	monster->info.set_maxhp(100);
+	monster->info.set_attack(10);
+	monster->info.set_defence(2);
 
 	return monster;
 }

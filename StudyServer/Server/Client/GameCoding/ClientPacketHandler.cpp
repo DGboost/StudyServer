@@ -4,6 +4,7 @@
 #include "DevScene.h"
 #include "MyPlayer.h"
 #include "SceneManager.h"
+#include "HitEffect.h"
 
 void ClientPacketHandler::HandlePacket(ServerSessionRef session, BYTE* buffer, int32 len)
 {
@@ -25,9 +26,14 @@ void ClientPacketHandler::HandlePacket(ServerSessionRef session, BYTE* buffer, i
 		break;
 	case S_RemoveObject:
 		Handle_S_RemoveObject(session, buffer, len);
-		break;
-	case S_Move:
+		break;	case S_Move:
 		Handle_S_Move(session, buffer, len);
+		break;
+	case S_Attack:
+		Handle_S_Attack(session, buffer, len);
+		break;
+	case S_Die:
+		Handle_S_Die(session, buffer, len);
 		break;
 	}
 }
@@ -159,6 +165,80 @@ void ClientPacketHandler::Handle_S_Move(ServerSessionRef session, BYTE* buffer, 
 	}
 }
 
+void ClientPacketHandler::Handle_S_Attack(ServerSessionRef session, BYTE* buffer, int32 len)
+{
+	PacketHeader* header = (PacketHeader*)buffer;
+	uint16 size = header->size;
+
+	Protocol::S_Attack pkt;
+	pkt.ParseFromArray(&header[1], size - sizeof(PacketHeader));
+
+	const Protocol::ObjectInfo& attackerInfo = pkt.attackerinfo();
+	uint64 targetId = pkt.targetid();
+	uint32 damage = pkt.damage();
+
+	DevScene* scene = GET_SINGLE(SceneManager)->GetDevScene();
+	if (scene)
+	{
+		GameObject* attacker = scene->GetObject(attackerInfo.objectid());
+		
+		if (attacker)
+		{
+			// 항상 공격 애니메이션 시작 (타겟이 있든 없든)
+			attacker->SetState(SKILL);
+			
+			// 타겟이 있는 경우에만 히트 이펙트와 데미지 처리
+			if (targetId != 0)
+			{
+				GameObject* target = scene->GetObject(targetId);
+				if (target)
+				{
+					// 타겟의 HP 업데이트
+					target->info.set_hp(target->info.hp() - damage);
+					
+					// 히트 이펙트 생성
+					Vec2 targetWorldPos = target->GetPos();
+					HitEffect* hitEffect = new HitEffect();
+					hitEffect->SetPos(targetWorldPos);
+					scene->AddActor(hitEffect);
+					
+					cout << "Attack with target: " << attackerInfo.objectid() << " -> " << targetId 
+						 << " (Damage: " << damage << ")" << endl;
+				}
+			}
+			else
+			{
+				cout << "Air attack by: " << attackerInfo.objectid() << " (no target)" << endl;
+			}
+		}
+	}
+}
+
+void ClientPacketHandler::Handle_S_Die(ServerSessionRef session, BYTE* buffer, int32 len)
+{
+	PacketHeader* header = (PacketHeader*)buffer;
+	uint16 size = header->size;
+
+	Protocol::S_Die pkt;
+	pkt.ParseFromArray(&header[1], size - sizeof(PacketHeader));
+
+	uint64 objectId = pkt.objectid();
+	uint64 killerId = pkt.killerid();
+
+	DevScene* scene = GET_SINGLE(SceneManager)->GetDevScene();
+	if (scene)
+	{
+		GameObject* deadObject = scene->GetObject(objectId);
+		if (deadObject)
+		{
+			// 사망 이펙트 등 시각적 처리
+			cout << "Object " << objectId << " died, killed by " << killerId << endl;
+			
+			// 플레이어가 죽은 경우가 아니라면 오브젝트는 서버에서 제거 처리됨
+		}
+	}
+}
+
 SendBufferRef ClientPacketHandler::Make_C_Move(Dir dir, bool isStop)
 {
 	Protocol::C_Move pkt;
@@ -182,4 +262,22 @@ SendBufferRef ClientPacketHandler::Make_C_Move(Dir dir, bool isStop)
 	// 예측 정보는 제거 (서버에서만 위치 계산)
 
 	return MakeSendBuffer(pkt, C_Move);
+}
+
+SendBufferRef ClientPacketHandler::Make_C_Attack(uint64 targetId)
+{
+	Protocol::C_Attack pkt;
+
+	MyPlayer* myPlayer = GET_SINGLE(SceneManager)->GetMyPlayer();
+	if (myPlayer)
+	{
+		// 공격자 정보 설정
+		Protocol::ObjectInfo* attackerInfo = pkt.mutable_attackerinfo();
+		*attackerInfo = myPlayer->info;
+		
+		// 타겟 ID 설정
+		pkt.set_targetid(targetId);
+	}
+
+	return MakeSendBuffer(pkt, C_Attack);
 }

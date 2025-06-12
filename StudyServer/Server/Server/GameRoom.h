@@ -29,6 +29,7 @@ public:
 public:
 	// PacketHandler
 	void Handle_C_Move(Protocol::C_Move& pkt);
+	void Handle_C_Attack(Protocol::C_Attack& pkt);
 
 public:
 	void AddObject(GameObjectRef gameObject);

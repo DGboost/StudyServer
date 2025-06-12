@@ -46,16 +46,29 @@ void Monster::UpdateIdle()
 		_target = room->FindClosestPlayer(GetCellPos());
 		_lastTargetUpdate = now;
 	}
-
 	PlayerRef target = _target.lock();
 	if (target)
 	{
 		Vec2Int dir = target->GetCellPos() - GetCellPos();
-		int32 dist = abs(dir.x) + abs(dir.y);		if (dist == 1)
+		int32 dist = abs(dir.x) + abs(dir.y);
+		
+		if (dist == 1)
 		{
+			// 인접한 플레이어 공격
 			SetDir(GetLookAtDir(target->GetCellPos()), true);
 			SetState(SKILL, true);
-			_waitUntil = GetTickCount64() + 1000;
+			_waitUntil = GetTickCount64() + 1000; // 1초 공격 쿨다운
+			
+			// 공격 실행 - 서버에서 직접 처리
+			if (room)
+			{
+				Protocol::C_Attack attackPkt;
+				Protocol::ObjectInfo* attackerInfo = attackPkt.mutable_attackerinfo();
+				*attackerInfo = this->info;
+				attackPkt.set_targetid(target->info.objectid());
+				
+				room->Handle_C_Attack(attackPkt);
+			}
 		}
 		else
 		{

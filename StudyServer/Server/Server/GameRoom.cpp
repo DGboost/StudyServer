@@ -200,6 +200,109 @@ void GameRoom::Handle_C_Move(Protocol::C_Move& pkt)
 	// BroadcastGameState()에서 주기적으로 전송됨
 }
 
+void GameRoom::Handle_C_Attack(Protocol::C_Attack& pkt)
+{
+	uint64 attackerId = pkt.attackerinfo().objectid();
+	uint64 targetId = pkt.targetid();
+
+	// 공격자 오브젝트 찾기
+	GameObjectRef attacker = FindObject(attackerId);
+	if (attacker == nullptr)
+	{
+		cout << "Attack failed: Invalid attacker" << endl;
+		return;
+	}
+
+	// 타겟이 없는 경우 (공중 공격)
+	if (targetId == 0)
+	{
+		cout << "Air attack by " << attackerId << " (no target)" << endl;
+		
+		// 공격 모션만 브로드캐스트 (데미지는 0)
+		SendBufferRef sendBuffer = ServerPacketHandler::Make_S_Attack(attacker->info, 0, 0);
+		Broadcast(sendBuffer);
+		return;
+	}
+
+	// 타겟 오브젝트 찾기
+	GameObjectRef target = FindObject(targetId);
+	if (target == nullptr)
+	{
+		cout << "Attack failed: Invalid target" << endl;
+		return;
+	}
+
+	// 공격 거리 체크 (인접한 셀만 공격 가능)
+	Vec2Int attackerPos = attacker->GetCellPos();
+	Vec2Int targetPos = target->GetCellPos();
+	int32 distance = abs(attackerPos.x - targetPos.x) + abs(attackerPos.y - targetPos.y);
+	
+	if (distance > 1)
+	{
+		cout << "Attack failed: Target too far (distance: " << distance << ")" << endl;
+		return;
+	}
+
+	// 데미지 계산
+	int32 attackerAttack = attacker->info.attack();
+	int32 targetDefence = target->info.defence();
+	int32 damage = max(1, attackerAttack - targetDefence); // 최소 1 데미지
+
+	// 타겟 HP 감소
+	int32 currentHp = target->info.hp();
+	int32 newHp = max(0, currentHp - damage);
+	target->info.set_hp(newHp);
+
+	cout << "Attack successful: " << attackerId << " -> " << targetId 
+		 << " (Damage: " << damage << ", HP: " << currentHp << " -> " << newHp << ")" << endl;
+
+	// 공격 정보를 모든 클라이언트에 브로드캐스트
+	{
+		SendBufferRef sendBuffer = ServerPacketHandler::Make_S_Attack(attacker->info, targetId, damage);
+		Broadcast(sendBuffer);
+	}
+
+	// 타겟이 죽었는지 확인
+	if (newHp <= 0)
+	{
+		cout << "Object " << targetId << " died, killed by " << attackerId << endl;
+		
+		// 사망 정보를 모든 클라이언트에 브로드캐스트
+		{
+			SendBufferRef sendBuffer = ServerPacketHandler::Make_S_Die(targetId, attackerId);
+			Broadcast(sendBuffer);
+		}
+
+		// 몬스터인 경우 재생성 처리
+		if (target->info.objecttype() == Protocol::OBJECT_TYPE_MONSTER)
+		{
+			// 몬스터 제거
+			RemoveObject(targetId);
+			
+			// 일정 시간 후 새 몬스터 생성 (간단한 구현을 위해 즉시 생성)
+			MonsterRef newMonster = GameObject::CreateMonster();
+			Vec2Int randomPos = GetRandomEmptyCellPos();
+			newMonster->SetCellPos(randomPos, false);
+			newMonster->info.set_state(IDLE);
+			newMonster->info.set_dir(DIR_DOWN);
+			newMonster->info.set_hp(100);
+			newMonster->info.set_maxhp(100);
+			newMonster->info.set_attack(10);
+			newMonster->info.set_defence(2);
+			AddObject(newMonster);
+			
+			cout << "New monster spawned at (" << randomPos.x << ", " << randomPos.y << ")" << endl;
+		}
+		else if (target->info.objecttype() == Protocol::OBJECT_TYPE_PLAYER)
+		{
+			// 플레이어가 죽은 경우 HP 복구 후 초기 위치로 이동
+			target->info.set_hp(target->info.maxhp());
+			target->SetCellPos(Vec2Int{5, 5}, false); // 초기 위치
+			cout << "Player " << targetId << " respawned at (5, 5)" << endl;
+		}
+	}
+}
+
 void GameRoom::AddObject(GameObjectRef gameObject)
 {
 	uint64 id = gameObject->info.objectid();
@@ -472,4 +575,23 @@ bool GameRoom::CanGo(Vec2Int cellPos)
 bool GameRoom::CanGo(int32 x, int32 y)
 {
 	return CanGo(Vec2Int{x, y});
+}
+
+Vec2Int GameRoom::GetRandomEmptyCellPos()
+{
+	// 간단한 구현: 무작위로 빈 위치 찾기
+	for (int attempts = 0; attempts < 100; attempts++)
+	{
+		int32 x = rand() % 20 + 5; // 5~24 범위
+		int32 y = rand() % 20 + 5; // 5~24 범위
+		Vec2Int pos{x, y};
+		
+		if (CanGo(pos))
+		{
+			return pos;
+		}
+	}
+	
+	// 찾지 못한 경우 기본 위치 반환
+	return Vec2Int{10, 10};
 }
