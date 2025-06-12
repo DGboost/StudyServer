@@ -43,28 +43,28 @@ void MyPlayer::TickInput()
 {
 	// 서버 권위 구조: 입력을 서버로 전송만
 	// GetButtonDown: 키를 누르는 순간에만 true
-	if (GET_SINGLE(InputManager)->GetButtonDown(KeyType::W))
+	if (GET_SINGLE(InputManager)->GetButtonDown(KeyType::Up))
 	{
 		TryMove(DIR_UP);
 	}
-	else if (GET_SINGLE(InputManager)->GetButtonDown(KeyType::S))
+	else if (GET_SINGLE(InputManager)->GetButtonDown(KeyType::Down))
 	{
 		TryMove(DIR_DOWN);
 	}
-	else if (GET_SINGLE(InputManager)->GetButtonDown(KeyType::A))
+	else if (GET_SINGLE(InputManager)->GetButtonDown(KeyType::Left))
 	{
 		TryMove(DIR_LEFT);
 	}
-	else if (GET_SINGLE(InputManager)->GetButtonDown(KeyType::D))
+	else if (GET_SINGLE(InputManager)->GetButtonDown(KeyType::Right))
 	{
 		TryMove(DIR_RIGHT);
 	}
 	
 	// 키를 떼면 정지 요청 전송
-	if (GET_SINGLE(InputManager)->GetButtonUp(KeyType::W) ||
-		GET_SINGLE(InputManager)->GetButtonUp(KeyType::S) ||
-		GET_SINGLE(InputManager)->GetButtonUp(KeyType::A) ||
-		GET_SINGLE(InputManager)->GetButtonUp(KeyType::D))
+	if (GET_SINGLE(InputManager)->GetButtonUp(KeyType::Up) ||
+		GET_SINGLE(InputManager)->GetButtonUp(KeyType::Down) ||
+		GET_SINGLE(InputManager)->GetButtonUp(KeyType::Left) ||
+		GET_SINGLE(InputManager)->GetButtonUp(KeyType::Right))
 	{
 		TryStop();
 	}
@@ -84,7 +84,7 @@ void MyPlayer::TickInput()
 	}
 
 	// 스킬 사용 - 나중에 서버로 전송하도록 수정 예정
-	if (GET_SINGLE(InputManager)->GetButtonDown(KeyType::SpaceBar))
+	if (GET_SINGLE(InputManager)->GetButtonDown(KeyType::A))
 	{
 		// TODO: 서버에 스킬 사용 패킷 전송
 		cout << "Skill input received - TODO: send to server" << endl;

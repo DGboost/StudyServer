@@ -412,9 +412,9 @@ Player* DevScene::FindClosestPlayer(Vec2Int pos)
 bool DevScene::FindPath(Vec2Int src, Vec2Int dest, vector<Vec2Int>& path, int32 maxDepth)
 {
 	// F = G + H
-	// F = ���� ����(���� ���� ����)
-	// G = ���������� �ش� ��ǥ���� �̵��ϴµ� ��� ���
-	// H = ���������� �ش� ��ǥ���� �̵��ϴµ� ��� ���
+	// F = cost + heuristic
+	// G = cost (src -> dest)
+	// H = heuristic (dest -> src)
 	int32 depth = abs(src.y - dest.y) + abs(src.x - dest.x);
 	if (depth >= maxDepth)
 		return false;
@@ -423,7 +423,6 @@ bool DevScene::FindPath(Vec2Int src, Vec2Int dest, vector<Vec2Int>& path, int32 
 	map<Vec2Int, int32> best;
 	map<Vec2Int, Vec2Int> parent;
 
-	// �ʱⰪ
 	{
 		int32 cost = abs(dest.y - src.y) + abs(dest.x - src.x);
 
@@ -444,22 +443,19 @@ bool DevScene::FindPath(Vec2Int src, Vec2Int dest, vector<Vec2Int>& path, int32 
 
 	while (pq.empty() == false)
 	{
-		// ���� ���� �ĺ��� ã�´�
+		// PQNode extractMin = pq.top();
 		PQNode node = pq.top();
 		pq.pop();
 
-		// �� ª�� ��θ� �ڴʰ� ã�Ҵٸ� ��ŵ
 		if (best[node.pos] < node.cost)
 			continue;
 
-		// �������� ���������� �ٷ� ����
 		if (node.pos == dest)
 		{
 			found = true;
 			break;
 		}
 
-		// �湮
 		for (int32 dir = 0; dir < 4; dir++)
 		{
 			Vec2Int nextPos = node.pos + front[dir];

@@ -61,7 +61,7 @@ void GameRoom::EnterRoom(GameSessionRef session)
 {
 	PlayerRef player = GameObject::CreatePlayer();
 
-	// ������ ���縦 ����
+	// 세션과 플레이어 연결 설정
 	session->gameRoom = GetRoomRef();
 	session->player = player;
 	player->session = session;
@@ -72,12 +72,11 @@ void GameRoom::EnterRoom(GameSessionRef session)
 	player->info.set_worldx(5 * 48.0f + 24.0f);
 	player->info.set_worldy(5 * 48.0f + 24.0f);
 
-	// ������ Ŭ�󿡰� ������ �����ֱ�
+	// 플레이어 정보 설정
 	{
 		SendBufferRef sendBuffer = ServerPacketHandler::Make_S_MyPlayer(player->info);
 		session->Send(sendBuffer);
 	}
-	// ��� ������Ʈ ���� ����
 	{
 		Protocol::S_AddObject pkt;
 
