@@ -69,32 +69,8 @@ void Player::TickIdle()
 
 void Player::TickMove()
 {
-	float deltaTime = GET_SINGLE(TimeManager)->GetDeltaTime();
-
-	Vec2 dir = (_destPos - _pos);	
-	if (dir.Length() < 1.f)
-	{
-		SetState(IDLE);
-		_pos = _destPos;
-	}
-	else
-	{
-		switch (info.dir())
-		{
-		case DIR_UP:
-			_pos.y -= 200 * deltaTime;
-			break;
-		case DIR_DOWN:
-			_pos.y += 200 * deltaTime;
-			break;
-		case DIR_LEFT:
-			_pos.x -= 200 * deltaTime;
-			break;
-		case DIR_RIGHT:
-			_pos.x += 200 * deltaTime;
-			break;
-		}
-	}	
+	// 이동 로직은 GameObject::UpdateInterpolation에서 처리
+	// 기존의 수동 이동 코드 제거
 }
 
 void Player::TickSkill()

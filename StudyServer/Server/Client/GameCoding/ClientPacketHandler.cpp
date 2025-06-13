@@ -140,23 +140,43 @@ void ClientPacketHandler::Handle_S_Move(ServerSessionRef session, BYTE* buffer, 
 		GameObject* gameObject = scene->GetObject(info.objectid());
 		if (gameObject)
 		{
-			// 서버 권위 구조: 모든 오브젝트는 서버에서 받은 상태를 그대로 적용
 			Vec2Int serverPos = Vec2Int{info.posx(), info.posy()};
-			
-			// 서버에서 받은 위치, 상태, 방향을 즉시 적용
-			gameObject->SetCellPos(serverPos, true); // 항상 즉시 적용
-			gameObject->SetDir(info.dir());
-			gameObject->SetState(info.state());
 			
 			MyPlayer* myPlayer = GET_SINGLE(SceneManager)->GetMyPlayer();
 			if (myPlayer && gameObject == myPlayer)
 			{
-				cout << "MyPlayer position updated by server: (" << serverPos.x << ", " << serverPos.y << "), state: " << info.state() << ", dir: " << info.dir() << endl;
+				// 내 플레이어의 경우: 서버 검증 결과에 따른 보정
+				Vec2Int currentTargetPos = myPlayer->_targetCellPos;
+				
+				if (currentTargetPos.x == serverPos.x && currentTargetPos.y == serverPos.y)
+				{
+					// 예측 성공: 서버가 내 예측을 승인
+					cout << "MyPlayer prediction SUCCESS: server confirmed move to (" << serverPos.x << ", " << serverPos.y << ")" << endl;
+					
+					// 논리적 위치 확정 (시각적 애니메이션은 계속 진행)
+					gameObject->info.set_posx(serverPos.x);
+					gameObject->info.set_posy(serverPos.y);
+				}
+				else
+				{
+					// 예측 실패: 서버가 다른 위치로 보정
+					cout << "MyPlayer prediction FAILED: server corrected position from (" 
+						 << currentTargetPos.x << ", " << currentTargetPos.y << ") to (" 
+						 << serverPos.x << ", " << serverPos.y << ")" << endl;
+					
+					// 즉시 서버 위치로 보정 (부드러운 보정을 위해 teleport=false 사용)
+					gameObject->SetCellPos(serverPos, false);
+				}
 			}
 			else
 			{
-				cout << "Object " << info.objectid() << " updated by server: (" << serverPos.x << ", " << serverPos.y << "), state: " << info.state() << ", dir: " << info.dir() << endl;
+				// 다른 플레이어나 오브젝트: 서버 위치로 부드럽게 이동
+				gameObject->SetCellPos(serverPos, false);
 			}
+			
+			// 상태와 방향 업데이트
+			gameObject->SetDir(info.dir());
+			gameObject->SetState(info.state());
 		}
 		else
 		{

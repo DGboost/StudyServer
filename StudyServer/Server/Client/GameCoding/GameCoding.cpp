@@ -30,9 +30,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     game.Init(g_hWnd);
 
     MSG msg = {};
-    uint64 prevTick = 0;
-
-    // 3) 메인 루프
+    uint64 prevTick = 0;    // 3) 메인 루프
     while (msg.message != WM_QUIT)
     {
         if (::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
@@ -40,8 +38,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			::TranslateMessage(&msg);
 			::DispatchMessage(&msg);
 		}
-		else        {
-            uint64 now = ::GetTickCount64();            if (now - prevTick >= 16) // 약 60fps로 제한 (16ms)
+		else
+        {
+            uint64 now = ::GetTickCount64();
+            // 더 정밀한 60fps 제한 (16.67ms)
+            if (now - prevTick >= 16) 
             {
 				game.Update();
 				game.Render();
@@ -50,8 +51,17 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
             }
             else
             {
-                // CPU 사용률 줄이기 위한 짧은 대기
-                Sleep(1);
+                // CPU 사용률 최적화 - 더 부드러운 대기
+                uint64 remaining = 16 - (now - prevTick);
+                if (remaining > 2) 
+                {
+                    Sleep(1); // 1ms 대기
+                }
+                else 
+                {
+                    // 매우 짧은 대기 시간에서는 yield만 수행
+                    ::SwitchToThread();
+                }
             }
         }
     }

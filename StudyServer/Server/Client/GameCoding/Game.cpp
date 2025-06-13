@@ -14,7 +14,7 @@ Game::Game()
 
 Game::~Game()
 {
-	// »ç½Ç ¸¶Áö¸·¿¡ ..
+	// ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ..
 	GET_SINGLE(SceneManager)->Clear();
 	GET_SINGLE(ResourceManager)->Clear();
 
@@ -28,9 +28,9 @@ void Game::Init(HWND hwnd)
 
 	::GetClientRect(hwnd, &_rect);
 
-	hdcBack = ::CreateCompatibleDC(hdc); // hdc¿Í È£È¯µÇ´Â DC¸¦ »ı¼º
-	_bmpBack = ::CreateCompatibleBitmap(hdc, _rect.right, _rect.bottom); // hdc¿Í È£È¯µÇ´Â ºñÆ®¸Ê »ı¼º
-	HBITMAP prev = (HBITMAP)::SelectObject(hdcBack, _bmpBack); // DC¿Í BMP¸¦ ¿¬°á
+	hdcBack = ::CreateCompatibleDC(hdc); // hdcï¿½ï¿½ È£È¯ï¿½Ç´ï¿½ DCï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+	_bmpBack = ::CreateCompatibleBitmap(hdc, _rect.right, _rect.bottom); // hdcï¿½ï¿½ È£È¯ï¿½Ç´ï¿½ ï¿½ï¿½Æ®ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+	HBITMAP prev = (HBITMAP)::SelectObject(hdcBack, _bmpBack); // DCï¿½ï¿½ BMPï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 	::DeleteObject(prev);
 
 	GET_SINGLE(TimeManager)->Init();
@@ -54,6 +54,11 @@ void Game::Update()
 
 void Game::Render()
 {
+	// ë°± ë²„í¼ í´ë¦¬ì–´ (ê²€ì€ìƒ‰ìœ¼ë¡œ) - ë” ë¶€ë“œëŸ¬ìš´ í´ë¦¬ì–´
+	HBRUSH blackBrush = (HBRUSH)GetStockObject(BLACK_BRUSH);
+	RECT fullRect = { 0, 0, _rect.right, _rect.bottom };
+	::FillRect(hdcBack, &fullRect, blackBrush);
+	
 	GET_SINGLE(SceneManager)->Render(hdcBack);
 
 	uint32 fps = GET_SINGLE(TimeManager)->GetFps();
@@ -62,15 +67,19 @@ void Game::Render()
 	{
 		POINT mousePos = GET_SINGLE(InputManager)->GetMousePos();
 		wstring str = std::format(L"Mouse({0}, {1})", mousePos.x, mousePos.y);
+		// í…ìŠ¤íŠ¸ ë°°ê²½ íˆ¬ëª…í™”ë¡œ ë” ê¹”ë”í•œ UI
+		::SetBkMode(hdcBack, TRANSPARENT);
+		::SetTextColor(hdcBack, RGB(255, 255, 255));
 		::TextOut(hdcBack, 20, 10, str.c_str(), static_cast<int32>(str.size()));
 	}
 	
 	{
-		wstring str = std::format(L"FPS({0}), DT({1})", fps, deltaTime);
+		wstring str = std::format(L"FPS({0}), DT({1:.3f})", fps, deltaTime);
+		::SetBkMode(hdcBack, TRANSPARENT);
+		::SetTextColor(hdcBack, RGB(255, 255, 255));
 		::TextOut(hdcBack, 550, 10, str.c_str(), static_cast<int32>(str.size()));
 	}
 
-	// Double Buffering
-	::BitBlt(hdc, 0, 0, _rect.right, _rect.bottom, hdcBack, 0, 0, SRCCOPY); // ºñÆ® ºí¸´ : °í¼Ó º¹»ç
-	::PatBlt(hdcBack, 0, 0, _rect.right, _rect.bottom, WHITENESS);
+	// Double Buffering - ë” ë¶€ë“œëŸ¬ìš´ ë³µì‚¬
+	::BitBlt(hdc, 0, 0, _rect.right, _rect.bottom, hdcBack, 0, 0, SRCCOPY);
 }

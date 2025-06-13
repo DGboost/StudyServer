@@ -85,24 +85,8 @@ void Monster::TickIdle()
 
 void Monster::TickMove()
 {
-	float deltaTime = GET_SINGLE(TimeManager)->GetDeltaTime();
-
-	Vec2 dir = (_destPos - _pos);
-	if (dir.Length() < 5.f)
-	{
-		SetState(IDLE);
-		_pos = _destPos;
-	}
-	else
-	{
-		// 서버 이동 간격(500ms)에 맞춰 속도 조정
-		// 48픽셀(한 타일) / 0.5초 = 96 pixels/second
-		Vec2 normalizedDir = dir;
-		normalizedDir.Normalize();
-		
-		_pos.x += normalizedDir.x * 96 * deltaTime; // 서버와 동기화된 속도
-		_pos.y += normalizedDir.y * 96 * deltaTime;
-	}
+	// 이동 로직은 GameObject::UpdateInterpolation에서 처리
+	// 기존의 수동 이동 코드 제거
 }
 
 void Monster::TickSkill()
