@@ -93,10 +93,9 @@ void Player::TickSkill()
 				scene->SpawnObject<HitEffect>(GetFrontCellPos());
 				creature->OnDamaged(this);
 			}
-		}
-		else if (_weaponType == WeaponType::Bow)
+		}		else if (_weaponType == WeaponType::Bow)
 		{
-			Arrow* arrow = scene->SpawnObject<Arrow>(GetCellPos());
+			Arrow* arrow = scene->SpawnObject<Arrow>(GetFrontCellPos());
 			arrow->SetDir(info.dir());	
 		}
 

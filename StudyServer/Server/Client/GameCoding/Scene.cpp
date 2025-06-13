@@ -3,7 +3,6 @@
 #include "Actor.h"
 #include "Creature.h"
 #include "Monster.h"
-#include "HitEffect.h"
 #include "UI.h"
 #include "TimeManager.h"
 #include "SceneManager.h"
@@ -48,8 +47,8 @@ void Scene::Update()
 
 	for (UI* ui : _uis)
 		ui->Tick();
-		
-	// 주기적으로 액터 수 로그
+			// 주기적으로 액터 수 로그 (필요시 주석 해제)
+	/*
 	static uint64 lastLogTime = 0;
 	uint64 currentTime = GetTickCount64();
 	if (currentTime - lastLogTime >= 5000) // 5초마다만 로그
@@ -57,6 +56,7 @@ void Scene::Update()
 		cout << "Scene Update - Total actors in LAYER_OBJECT: " << _actors[LAYER_OBJECT].size() << endl;
 		lastLogTime = currentTime;
 	}
+	*/
 }
 
 void Scene::Render(HDC hdc)
@@ -81,20 +81,14 @@ void Scene::AddActor(Actor* actor)
 		return;
 
 	_actors[actor->GetLayer()].push_back(actor);
-	
-	// 디버그 로그 추가
+		// 디버그 로그 추가 (필요시 주석 해제)
+	/*
 	Monster* monster = dynamic_cast<Monster*>(actor);
 	if (monster)
 	{
 		cout << "Scene::AddActor - Monster added to layer " << actor->GetLayer() << " Total actors in LAYER_OBJECT: " << _actors[LAYER_OBJECT].size() << endl;
 	}
-	
-	// HitEffect 디버그 로그 추가
-	HitEffect* hitEffect = dynamic_cast<HitEffect*>(actor);
-	if (hitEffect)
-	{
-		cout << "Scene::AddActor - HitEffect added to layer " << actor->GetLayer() << " Total actors in LAYER_EFFECT: " << _actors[LAYER_EFFECT].size() << endl;
-	}
+	*/
 }
 
 void Scene::RemoveActor(Actor* actor)

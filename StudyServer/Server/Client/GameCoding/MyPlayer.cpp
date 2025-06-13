@@ -41,30 +41,47 @@ void MyPlayer::Render(HDC hdc)
 
 void MyPlayer::TickInput()
 {
-	// 서버 권위 구조: 입력을 서버로 전송만
-	// GetButtonDown: 키를 누르는 순간에만 true
-	if (GET_SINGLE(InputManager)->GetButtonDown(KeyType::Up))
+	float deltaTime = GET_SINGLE(TimeManager)->GetDeltaTime();
+	_moveRequestTimer -= deltaTime;
+	
+	// 연속 이동을 위해 GetButton 사용 (키를 누르고 있는 동안 계속 true)
+	bool movementInput = false;
+	Dir inputDir = DIR_NONE;
+	
+	if (GET_SINGLE(InputManager)->GetButton(KeyType::Up))
 	{
-		TryMove(DIR_UP);
+		inputDir = DIR_UP;
+		movementInput = true;
 	}
-	else if (GET_SINGLE(InputManager)->GetButtonDown(KeyType::Down))
+	else if (GET_SINGLE(InputManager)->GetButton(KeyType::Down))
 	{
-		TryMove(DIR_DOWN);
+		inputDir = DIR_DOWN;
+		movementInput = true;
 	}
-	else if (GET_SINGLE(InputManager)->GetButtonDown(KeyType::Left))
+	else if (GET_SINGLE(InputManager)->GetButton(KeyType::Left))
 	{
-		TryMove(DIR_LEFT);
+		inputDir = DIR_LEFT;
+		movementInput = true;
 	}
-	else if (GET_SINGLE(InputManager)->GetButtonDown(KeyType::Right))
+	else if (GET_SINGLE(InputManager)->GetButton(KeyType::Right))
 	{
-		TryMove(DIR_RIGHT);
+		inputDir = DIR_RIGHT;
+		movementInput = true;
 	}
 	
-	// 키를 떼면 정지 요청 전송
-	if (GET_SINGLE(InputManager)->GetButtonUp(KeyType::Up) ||
-		GET_SINGLE(InputManager)->GetButtonUp(KeyType::Down) ||
-		GET_SINGLE(InputManager)->GetButtonUp(KeyType::Left) ||
-		GET_SINGLE(InputManager)->GetButtonUp(KeyType::Right))
+	// 이동 입력이 있고, 타이머가 만료되었을 때만 이동 요청 전송
+	if (movementInput && _moveRequestTimer <= 0.0f)
+	{
+		TryMove(inputDir);
+		_moveRequestTimer = MOVE_REQUEST_INTERVAL;
+	}
+	
+	// 모든 이동 키가 떼졌을 때 정지 요청 전송
+	if (!movementInput && 
+		(GET_SINGLE(InputManager)->GetButtonUp(KeyType::Up) ||
+		 GET_SINGLE(InputManager)->GetButtonUp(KeyType::Down) ||
+		 GET_SINGLE(InputManager)->GetButtonUp(KeyType::Left) ||
+		 GET_SINGLE(InputManager)->GetButtonUp(KeyType::Right)))
 	{
 		TryStop();
 	}
@@ -92,7 +109,7 @@ void MyPlayer::TickInput()
 void MyPlayer::TryMove(Dir dir)
 {
 	// 클라이언트 측 예측: 즉시 이동을 시작하고 서버에 요청 전송
-	cout << "Input received: attempting to move in direction " << dir << endl;
+	// cout << "Input received: attempting to move in direction " << dir << endl;
 	
 	// 현재 위치에서 목표 위치 계산
 	Vec2Int currentPos = GetCellPos();
@@ -124,13 +141,13 @@ void MyPlayer::TryMove(Dir dir)
 	SendBufferRef sendBuffer = ClientPacketHandler::Make_C_Move(dir);
 	GET_SINGLE(NetworkManager)->SendPacket(sendBuffer);
 	
-	cout << "Move prediction started and request sent to server for direction " << dir << endl;
+	// cout << "Move prediction started and request sent to server for direction " << dir << endl;
 }
 
 void MyPlayer::TryStop()
 {
 	// 클라이언트에서 즉시 정지 (예측)
-	cout << "Stop input received" << endl;
+	// cout << "Stop input received" << endl;
 	
 	// 클라이언트에서 즉시 IDLE 상태로 변경
 	SetState(IDLE);
@@ -140,7 +157,7 @@ void MyPlayer::TryStop()
 	SendBufferRef sendBuffer = ClientPacketHandler::Make_C_Move(currentDir, true); // isStop = true
 	GET_SINGLE(NetworkManager)->SendPacket(sendBuffer);
 	
-	cout << "Stop request sent to server" << endl;
+	// cout << "Stop request sent to server" << endl;
 }
 
 void MyPlayer::TryAttack()

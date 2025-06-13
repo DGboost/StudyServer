@@ -23,19 +23,12 @@ Game::~Game()
 
 void Game::Init(HWND hwnd)
 {
-	// 콘솔 창 활성화 (디버그 로그 확인용)
-	AllocConsole();
-	freopen_s((FILE**)stdout, "CONOUT$", "w", stdout);
-	freopen_s((FILE**)stderr, "CONOUT$", "w", stderr);
-	freopen_s((FILE**)stdin, "CONIN$", "r", stdin);
-	
-	// 콘솔 창 제목 설정
-	SetConsoleTitle(L"GameCoding Client Console");
-	
-	cout << "========================================" << endl;
-	cout << "GameCoding Client Started" << endl;
-	cout << "Console logging enabled" << endl;
-	cout << "========================================" << endl;
+	// 콘솔 창 숨기기 (혹시 다른 곳에서 생성된 경우)
+	HWND consoleWnd = GetConsoleWindow();
+	if (consoleWnd != NULL)
+	{
+		ShowWindow(consoleWnd, SW_HIDE);
+	}
 
 	_hwnd = hwnd;
 	hdc = ::GetDC(hwnd);

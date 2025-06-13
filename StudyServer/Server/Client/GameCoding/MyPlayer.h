@@ -23,5 +23,9 @@ private:
 	virtual void TickSkill() override;
 
 private:
+	// 이동 요청 제한을 위한 타이머
+	float _moveRequestTimer = 0.0f;
+	const float MOVE_REQUEST_INTERVAL = 0.1f; // 100ms 간격으로 이동 요청
+	
 	// 필요시 추가할 수 있는 멤버 변수들
 };
