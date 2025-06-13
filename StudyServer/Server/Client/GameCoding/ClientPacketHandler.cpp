@@ -167,10 +167,10 @@ void ClientPacketHandler::Handle_S_Move(ServerSessionRef session, BYTE* buffer, 
 					// 즉시 서버 위치로 보정 (부드러운 보정을 위해 teleport=false 사용)
 					gameObject->SetCellPos(serverPos, false);
 				}
-			}
-			else
+			}			else
 			{
 				// 다른 플레이어나 오브젝트: 서버 위치로 부드럽게 이동
+				cout << "Object " << info.objectid() << " moved to (" << serverPos.x << ", " << serverPos.y << ")" << endl;
 				gameObject->SetCellPos(serverPos, false);
 			}
 			
@@ -206,21 +206,59 @@ void ClientPacketHandler::Handle_S_Attack(ServerSessionRef session, BYTE* buffer
 		{
 			// 항상 공격 애니메이션 시작 (타겟이 있든 없든)
 			attacker->SetState(SKILL);
-			
-			// 타겟이 있는 경우에만 히트 이펙트와 데미지 처리
+					// 타겟이 있는 경우에만 히트 이펙트와 데미지 처리
 			if (targetId != 0)
-			{
-				GameObject* target = scene->GetObject(targetId);
-				if (target)
-				{
+			{				GameObject* target = scene->GetObject(targetId);				if (target)				{
 					// 타겟의 HP 업데이트
 					target->info.set_hp(target->info.hp() - damage);
 					
-					// 히트 이펙트 생성
-					Vec2 targetWorldPos = target->GetPos();
-					HitEffect* hitEffect = new HitEffect();
-					hitEffect->SetPos(targetWorldPos);
-					scene->AddActor(hitEffect);
+					// 타겟의 상세 위치 정보 출력
+					Vec2Int targetCellPos = target->GetCellPos();
+					Vec2 targetLogicalPos = target->GetPos();
+					Vec2 targetVisualPos = target->_visualPosition;
+					
+					cout << "[HitEffect Debug] Target ID " << targetId << " detailed position info:" << endl;
+					cout << "[HitEffect Debug]   - CellPos: (" << targetCellPos.x << ", " << targetCellPos.y << ")" << endl;
+					cout << "[HitEffect Debug]   - LogicalPos: (" << targetLogicalPos.x << ", " << targetLogicalPos.y << ")" << endl;					cout << "[HitEffect Debug]   - VisualPos: (" << targetVisualPos.x << ", " << targetVisualPos.y << ")" << endl;					// 히트 이펙트 생성 - 플레이어와 동일한 렌더링 방식 적용
+					Vec2 targetWorldPos;
+					
+					// MyPlayer인지 확인해서 특별 처리
+					MyPlayer* myPlayer = GET_SINGLE(SceneManager)->GetMyPlayer();
+					if (myPlayer && target == myPlayer)
+					{
+						// 내 플레이어의 경우: 현재 렌더링에 사용되는 _visualPosition 사용
+						targetWorldPos = myPlayer->_visualPosition;
+						cout << "[HitEffect Debug] Using MyPlayer's _visualPosition: (" << targetWorldPos.x << ", " << targetWorldPos.y << ")" << endl;
+					}
+					else
+					{
+						// 다른 객체의 경우: 동일한 방식으로 _visualPosition 사용
+						targetWorldPos = target->_visualPosition;
+						cout << "[HitEffect Debug] Using target's _visualPosition: (" << targetWorldPos.x << ", " << targetWorldPos.y << ")" << endl;
+					}
+							HitEffect* hitEffect = new HitEffect();
+					if (hitEffect != nullptr)
+					{
+						// 위치 설정
+						hitEffect->SetPos(targetWorldPos);
+						hitEffect->_visualPosition = targetWorldPos;
+						
+						// 타겟 설정 (피격 이펙트가 타겟을 따라가도록)
+						hitEffect->SetTarget(target);
+						
+						// 즉시 애니메이션 시작
+						hitEffect->BeginPlay();
+						
+						// 씬에 추가
+						scene->AddActor(hitEffect);
+						
+						cout << "[HitEffect Debug] HitEffect successfully created and added to scene at (" 
+							 << targetWorldPos.x << ", " << targetWorldPos.y << ")" << endl;
+					}
+					else
+					{
+						cout << "[HitEffect Error] Failed to create HitEffect object!" << endl;
+					}
 					
 					cout << "Attack with target: " << attackerInfo.objectid() << " -> " << targetId 
 						 << " (Damage: " << damage << ")" << endl;

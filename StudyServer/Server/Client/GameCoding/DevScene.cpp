@@ -471,12 +471,12 @@ bool DevScene::FindPath(Vec2Int src, Vec2Int dest, vector<Vec2Int>& path, int32 
 			int32 bestValue = best[nextPos];
 			if (bestValue != 0)
 			{
-				// �ٸ� ��ο��� �� ���� ���� ã������ ��ŵ
+				// existing cost is better than current cost?
 				if (bestValue <= cost)
 					continue;
 			}
 
-			// ���� ����
+			// cost = G + H
 			best[nextPos] = cost;
 			pq.push(PQNode(cost, nextPos));
 			parent[nextPos] = node.pos;
@@ -492,7 +492,7 @@ bool DevScene::FindPath(Vec2Int src, Vec2Int dest, vector<Vec2Int>& path, int32 
 			Vec2Int pos = item.first;
 			int32 score = item.second;
 
-			// �����̶��, ���� ��ġ���� ���� �� �̵��ϴ� ������
+			// dest -> src
 			if (bestScore == score)
 			{
 				int32 dist1 = abs(dest.x - src.x) + abs(dest.y - src.y);
@@ -515,7 +515,7 @@ bool DevScene::FindPath(Vec2Int src, Vec2Int dest, vector<Vec2Int>& path, int32 
 	{
 		path.push_back(pos);
 
-		// ������
+		// If we reached the source, break
 		if (pos == parent[pos])
 			break;
 
@@ -539,7 +539,7 @@ bool DevScene::CanGo(Vec2Int cellPos)
 	if (tile == nullptr)
 		return false;
 
-	// ���� �浹?
+	// Check if the tile is walkable (value != 1 means walkable)
 	if (GetCreatureAt(cellPos) != nullptr)
 		return false;
 
@@ -579,7 +579,7 @@ Vec2Int DevScene::GetRandomEmptyCellPos()
 
 	Vec2Int size = tm->GetMapSize();
 
-	// �� �� �õ�?
+	// 무작위로 빈 셀을 찾기
 	while (true)
 	{
 		int32 x = rand() % size.x;

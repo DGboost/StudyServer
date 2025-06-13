@@ -30,10 +30,18 @@ public:
 	static void Handle_S_Move(ServerSessionRef session, BYTE* buffer, int32 len);
 	static void Handle_S_Attack(ServerSessionRef session, BYTE* buffer, int32 len);
 	static void Handle_S_Die(ServerSessionRef session, BYTE* buffer, int32 len);
-
 	// ������
 	static SendBufferRef Make_C_Move(Dir dir, bool isStop = false);
 	static SendBufferRef Make_C_Attack(uint64 targetId);
+
+private:
+	// 중복 이펙트 생성 방지를 위한 변수들
+	static uint64 lastAttackerId;
+	static uint64 lastTargetId;
+	static uint32 lastDamage;
+	static clock_t lastAttackTime;
+
+public:
 
 	template<typename T>
 	static SendBufferRef MakeSendBuffer(T& pkt, uint16 pktId)

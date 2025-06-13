@@ -24,6 +24,13 @@ void HitEffect::Tick()
 {
 	Super::Tick();
 
+	// 타겟이 있으면 타겟의 위치를 따라가기
+	if (_target != nullptr)
+	{
+		_pos = _target->_visualPosition;
+		_visualPosition = _target->_visualPosition;
+	}
+
 	if (IsAnimationEnded())
 	{
 		Scene* scene = GET_SINGLE(SceneManager)->GetCurrentScene();

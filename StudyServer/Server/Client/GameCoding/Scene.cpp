@@ -3,6 +3,7 @@
 #include "Actor.h"
 #include "Creature.h"
 #include "Monster.h"
+#include "HitEffect.h"
 #include "UI.h"
 #include "TimeManager.h"
 #include "SceneManager.h"
@@ -86,6 +87,13 @@ void Scene::AddActor(Actor* actor)
 	if (monster)
 	{
 		cout << "Scene::AddActor - Monster added to layer " << actor->GetLayer() << " Total actors in LAYER_OBJECT: " << _actors[LAYER_OBJECT].size() << endl;
+	}
+	
+	// HitEffect 디버그 로그 추가
+	HitEffect* hitEffect = dynamic_cast<HitEffect*>(actor);
+	if (hitEffect)
+	{
+		cout << "Scene::AddActor - HitEffect added to layer " << actor->GetLayer() << " Total actors in LAYER_EFFECT: " << _actors[LAYER_EFFECT].size() << endl;
 	}
 }
 
