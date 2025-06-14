@@ -15,17 +15,17 @@ public:
 	~Listener();
 
 public:
-	/* ¿ÜºÎ¿¡¼­ »ç¿ë */
+	/* ì„¸ì…˜ ì‹œìž‘ */
 	bool StartAccept(ServerServiceRef service);
 	void CloseSocket();
 
 public:
-	/* ÀÎÅÍÆäÀÌ½º ±¸Çö */
+	/* IocpObject ê´€ë ¨ */
 	virtual HANDLE GetHandle() override;
 	virtual void Dispatch(struct IocpEvent* iocpEvent, int32 numOfBytes = 0) override;
 
 private:
-	/* ¼ö½Å °ü·Ã */
+	/* ë‚´ë¶€ í•¨ìˆ˜ */
 	void RegisterAccept(IocpEvent* acceptEvent);
 	void ProcessAccept(IocpEvent* acceptEvent);
 
