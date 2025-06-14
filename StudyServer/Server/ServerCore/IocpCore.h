@@ -1,4 +1,7 @@
 #pragma once
+#include <thread>
+#include <vector>
+#include <atomic>
 
 /*----------------
 	IocpObject
@@ -26,6 +29,17 @@ public:
 	bool		Register(IocpObjectRef iocpObject);
 	bool		Dispatch(uint32 timeoutMs = INFINITE);
 
+	// 워커 스레드 관리
+	void		StartWorkerThreads(int32 threadCount);
+	void		StopWorkerThreads();
+
+private:
+	void		WorkerThreadMain();
+
 private:
 	HANDLE		_iocpHandle;
+	
+	// 워커 스레드 관련
+	vector<thread>	_workerThreads;
+	atomic<bool>	_stopFlag = false;
 };
